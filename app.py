@@ -3,6 +3,7 @@ import re
 import time
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from google import genai
 import streamlit as st
 
 # ================= CONFIGURACIÓN DE TUS CREDENCIALES =================
@@ -113,16 +114,20 @@ with tab1:
         except Exception as e:
           st.error(f"Ocurrió un error durante el proceso: {e}")
 
-# ================= PESTAÑA 2: GENERADOR MÁGICO =================
+# ================= PESTAÑA 2: GENERADOR MÁGICO CON GEMINI =================
 with tab2:
-  st.header("Genera un TXT basado en tus gustos")
-  st.write("Genera una playlist automática a partir de tus artistas favoritos.")
+  subtitle_tab2 = (
+      "Genera una playlist con IA"
+  )
+  st.header("Generador de playlist con Gemini")
+  st.write(subtitle_tab2)
 
   num_artistas = st.slider(
       "¿Cuántos artistas de referencia quieres usar?",
       min_value=1,
       max_value=5,
       value=3,
+      key="slider_num_artistas",
   )
 
   artistas = []
@@ -130,92 +135,80 @@ with tab2:
   for i in range(num_artistas):
     with cols[i % 2]:
       artista_input = st.text_input(
-          f"Artista {i+1}", key=f"artista_{i}", placeholder="Ej: Daft Punk"
+          f"Artista {i+1}", key=f"gemini_artista_{i}", placeholder="Ej: Daft Punk"
       )
       if artista_input.strip():
         artistas.append(artista_input.strip())
 
   canciones_por_artista = st.slider(
-      "¿Cuántas canciones incluir por cada artista?",
+      "¿Cuántas canciones por artista?",
       min_value=1,
       max_value=10,
-      value=3,
+      value=4,
+      key="slider_canciones_por_artista",
   )
 
-  if st.button("Generar Archivo .txt de Canciones", use_container_width=True):
+  if st.button(
+      "Generar playlist",
+      type="primary",
+      use_container_width=True,
+      key="btn_generar_gemini",
+  ):
     if not artistas:
-      st.error("Por favor, introduce al menos un nombre de artista válido.")
-    elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID_REAL":
-      st.error("Configura tus credenciales de Spotify en el código.")
+      st.error("Por favor, introduce al menos un artista de referencia.")
     else:
-      with st.spinner("Buscando canciones en Spotify..."):
+      with st.spinner("Gemini está curando y seleccionando las canciones..."):
         try:
-          auth_manager = SpotifyOAuth(
-              client_id=CLIENT_ID,
-              client_secret=CLIENT_SECRET,
-              redirect_uri=REDIRECT_URI,
-              scope="",
-              cache_path=None,
+          # Inicializar el cliente de Gemini (toma automáticamente la API Key del entorno o Streamlit Secrets)
+          ai_client = genai.Client()
+
+          prompt = (
+              f"Actúa como un DJ experto y curador musical. A partir de los"
+              f" siguientes artistas o géneros de referencia: {', '.join(artistas)},"
+              f" genera una lista de canciones recomendadas. Debe incluir tanto"
+              f" éxitos de estos artistas como de otros artistas muy similares"
+              f" del mismo género. Necesito un total aproximado de"
+              f" {num_artistas * canciones_por_artista} canciones.\n\n"
+              f"REQUISITO ESTRICTO DE FORMATO: Devuelve exclusivamente la"
+              f" lista de canciones en formato de texto plano, una por línea,"
+              f" exactamente con este formato exacto: 'Nombre del Artista -"
+              f" Nombre de la Canción'. No incluyas números, ni introducciones,"
+              f" ni viñetas, solo las líneas de texto."
           )
-          sp = spotipy.Spotify(auth_manager=auth_manager)
 
-          lista_generada = []
+          response = ai_client.models.generate_content(
+              model="gemini-2.5-flash",
+              contents=prompt,
+          )
 
-          for artista in artistas:
-            # Búsqueda segura del artista
-            result_search = sp.search(q=artista, type="artist", limit=1)
-            artists_items = result_search["artists"]["items"]
+          texto_resultado = response.text.strip()
 
-            if not artists_items and len(artista) > 3:
-              # Intento de rescate si hay error tipográfico (primera palabra)
-              query_simplificada = artista.split()[0]
-              result_search = sp.search(
-                  q=query_simplificada, type="artist", limit=1
-              )
-              artists_items = result_search["artists"]["items"]
-
-            if artists_items:
-              artist_id = artists_items[0]["id"]
-              artist_real_name = artists_items[0]["name"]
-              st.write(f"✅ Encontrado: **{artist_real_name}**")
-
-              # Extraer top tracks directamente sin bloqueos
-              top_tracks = sp.artist_top_tracks(artist_id, country="US")[
-                  "tracks"
-              ]
-              selected_tracks = top_tracks[:canciones_por_artista]
-
-              for track in selected_tracks:
-                lista_generada.append(
-                    f"{track['artists'][0]['name']} - {track['name']}"
-                )
-            else:
-              st.warning(f"⚠️ No se encontró el artista: '{artista}'.")
-
-            time.sleep(0.1)
-
-          if lista_generada:
-            lista_generada = list(dict.fromkeys(lista_generada))
-            texto_resultado = "\n".join(lista_generada)
-
+          if texto_resultado:
             st.success(
-                f"¡Se han generado {len(lista_generada)} canciones con éxito!"
+                "¡Lista generada con éxito por Gemini con cero bloqueos!"
             )
-            st.text_area("Vista previa del TXT:", texto_resultado, height=200)
+            st.text_area(
+                "Vista previa del TXT generado:", texto_resultado, height=200
+            )
 
+            # Botón de descarga directa del .txt para pasarlo a la Pestaña 1 si se quiere
             st.download_button(
-                label="Descargar archivo .txt",
+                label="📥 Descargar archivo .txt para la Pestaña 1",
                 data=texto_resultado,
-                file_name="playlist_generada.txt",
+                file_name="playlist_gemini.txt",
                 mime="text/plain",
                 type="primary",
                 use_container_width=True,
+                key="download_gemini_txt",
             )
           else:
             st.error(
-                "No se pudieron extraer canciones. Verifica los nombres de los"
-                " artistas."
+                "Gemini no devolvió resultados. Inténtalo de nuevo con otros"
+                " nombres."
             )
 
         except Exception as e:
-          st.error(f"Error técnico al generar la lista: {e}")
+          st.error(
+              f"Error al conectar con Gemini: {e}. Asegúrate de configurar tu"
+              " API Key de Google GenAI."
+          )
