@@ -118,7 +118,6 @@ with tab2:
   st.header("Genera un TXT basado en tus gustos")
   st.write("Genera una playlist automática a partir de tus artistas favoritos.")
 
-  # 1. Primero definimos el selector numérico de artistas
   num_artistas = st.slider(
       "¿Cuántos artistas de referencia quieres usar?",
       min_value=1,
@@ -126,7 +125,6 @@ with tab2:
       value=3,
   )
 
-  # 2. Luego creamos los campos de texto dinámicamente según ese número
   artistas = []
   cols = st.columns(2)
   for i in range(num_artistas):
@@ -137,7 +135,6 @@ with tab2:
       if artista_input.strip():
         artistas.append(artista_input.strip())
 
-  # 3. Selector de canciones por artista
   canciones_por_artista = st.slider(
       "¿Cuántas canciones incluir por cada artista?",
       min_value=1,
@@ -151,9 +148,7 @@ with tab2:
     elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID_REAL":
       st.error("Configura tus credenciales de Spotify en el código.")
     else:
-      with st.spinner(
-          "Buscando artistas (tolerante a errores) y procesando canciones..."
-      ):
+      with st.spinner("Buscando canciones en Spotify..."):
         try:
           auth_manager = SpotifyOAuth(
               client_id=CLIENT_ID,
@@ -167,12 +162,12 @@ with tab2:
           lista_generada = []
 
           for artista in artistas:
-            # Búsqueda principal
+            # Búsqueda segura del artista
             result_search = sp.search(q=artista, type="artist", limit=1)
             artists_items = result_search["artists"]["items"]
 
-            # Sistema de rescate ante errores tipográficos
-            if not artists_items and len(artista) > 4:
+            if not artists_items and len(artista) > 3:
+              # Intento de rescate si hay error tipográfico (primera palabra)
               query_simplificada = artista.split()[0]
               result_search = sp.search(
                   q=query_simplificada, type="artist", limit=1
@@ -182,51 +177,22 @@ with tab2:
             if artists_items:
               artist_id = artists_items[0]["id"]
               artist_real_name = artists_items[0]["name"]
-              st.write(
-                  f"✅ Artista encontrado: **{artist_real_name}**"
-                  f" (buscado como '{artista}')"
-              )
+              st.write(f"✅ Encontrado: **{artist_real_name}**")
 
-              # Obtener top tracks del artista principal
+              # Extraer top tracks directamente sin bloqueos
               top_tracks = sp.artist_top_tracks(artist_id, country="US")[
                   "tracks"
               ]
               selected_tracks = top_tracks[:canciones_por_artista]
+
               for track in selected_tracks:
                 lista_generada.append(
                     f"{track['artists'][0]['name']} - {track['name']}"
                 )
-
-              # Obtener artistas relacionados de forma segura
-              try:
-                related_artists = sp.artist_related_artists(artist_id)[
-                    "artists"
-                ]
-                if related_artists:
-                  sample_related = random.sample(
-                      related_artists, min(2, len(related_artists))
-                  )
-                  for rel_artist in sample_related:
-                    rel_top_tracks = sp.artist_top_tracks(
-                        rel_artist["id"], country="US"
-                    )["tracks"]
-                    rel_selected = rel_top_tracks[
-                        : max(1, canciones_por_artista - 1)
-                    ]
-                    for track in rel_selected:
-                      lista_generada.append(
-                          f"{track['artists'][0]['name']} - {track['name']}"
-                      )
-              except Exception:
-                pass
-
             else:
-              st.warning(
-                  f"⚠️ No se pudo encontrar a '{artista}' en Spotify. Saltando"
-                  " al siguiente..."
-              )
+              st.warning(f"⚠️ No se encontró el artista: '{artista}'.")
 
-            time.sleep(0.2)
+            time.sleep(0.1)
 
           if lista_generada:
             lista_generada = list(dict.fromkeys(lista_generada))
@@ -247,9 +213,9 @@ with tab2:
             )
           else:
             st.error(
-                "No se encontraron canciones para los artistas ingresados."
-                " Revisa los nombres e inténtalo de nuevo."
+                "No se pudieron extraer canciones. Verifica los nombres de los"
+                " artistas."
             )
 
         except Exception as e:
-          st.error(f"Error inesperado al generar la lista: {e}")
+          st.error(f"Error técnico al generar la lista: {e}")
