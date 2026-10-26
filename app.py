@@ -14,104 +14,210 @@ CLIENT_SECRET = "ce6c0302d9b147aabdcd3f8f4a62bab0"
 REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/"  # O pon http://localhost:8888 si lo pruebas en local
 # ======================================================================
 
-st.set_page_config(page_title="plAIlist", page_icon="P", layout="centered")
+st.set_page_config(
+    page_title="PlAIlister", page_icon="P", layout="centered"
+)
 
-st.title("plAIlist")
+# =====================================================================
+# ESTILOS CSS PERSONALIZADOS (UI ESTILO SPOTIFY)
+# =====================================================================
+st.markdown(
+    """
+    <style>
+    /* Fondo general oscuro estilo Spotify */
+    .stApp {
+        background-color: #121212;
+        color: #FFFFFF;
+        font-family: 'Circular Std', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    /* Contenedor tipo tarjeta Spotify */
+    .spotify-card {
+        background-color: #181818;
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid #282828;
+        margin-bottom: 20px;
+        transition: background-color 0.3s ease;
+    }
+    .spotify-card:hover {
+        background-color: #282828;
+    }
+
+    /* Botones principales estilo Spotify (Verdes) */
+    .stButton>button[kind="primary"] {
+        background-color: #1DB954 !important;
+        color: #000000 !important;
+        font-weight: 700;
+        border-radius: 500px;
+        border: none;
+        padding: 10px 24px;
+        transition: transform 0.1s ease, background-color 0.2s;
+    }
+    .stButton>button[kind="primary"]:hover {
+        background-color: #1ed760 !important;
+        transform: scale(1.02);
+    }
+
+    /* Botones secundarios */
+    .stButton>button {
+        background-color: #282828;
+        color: #FFFFFF;
+        border: 1px solid #3E3E3E;
+        border-radius: 500px;
+        font-weight: 600;
+    }
+    .stButton>button:hover {
+        border-color: #FFFFFF;
+        color: #FFFFFF;
+    }
+
+    /* Campos de texto y inputs */
+    .stTextInput>div>div>input, .stTextArea>div>div>textarea {
+        background-color: #242424;
+        color: #FFFFFF;
+        border: 1px solid #3E3E3E;
+        border-radius: 8px;
+    }
+    .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
+        border-color: #1DB954;
+    }
+
+    /* Títulos */
+    h1, h2, h3 {
+        color: #FFFFFF;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    p, label {
+        color: #B3B3B3;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
+st.title("PlAIlister")
 st.write(
-    "Crea playlists mágicas con IA mediante lenguaje natural o sube tu propio"
-    " archivo de texto."
+    "Crea playlists inteligentes con inteligencia artificial o gestiona tus"
+    " archivos de texto."
 )
 
 st.markdown("---")
 
 # =====================================================================
-# SECCIÓN 1: GENERADOR INTELIGENTE CON GEMINI
+# SECCION 1: GENERADOR INTELIGENTE CON GEMINI (CARRUSEL DE EJEMPLOS)
 # =====================================================================
-st.header("✨ Generador Mágico con IA")
+st.subheader("Generador de listas con Inteligencia Artificial")
 st.write(
-    "Describe la música que buscas o selecciona un ejemplo para empezar"
-    " rápido:"
+    "Utiliza los ejemplos del carrusel o escribe tu propia solicitud detallada."
 )
 
-# 1. Carrusel / Banco de Ejemplos de Prompts (Usando botones en columnas o pills)
-ejemplos = [
-    "Playlist de Navidad incluyendo a John Mayer, Mariah Carey y Ed Sheeran...",
-    "Rock clásico de los 80s ideal para correr por la mañana, enérgico y motivador",
+# Lista de 10 ejemplos diversos de prompts
+ejemplos_prompts = [
+    "Playlist navideña incluyendo a John Mayer, Mariah Carey y Ed Sheeran",
+    "Rock clásico de los 80s ideal para correr por la mañana con alta energia",
     "Indie pop y bedroom pop suave para trabajar o concentrarse por la tarde",
-    "Tech house y minimal para una sesión de fiesta nocturna con amigos",
+    "Tech house y minimal para una sesion de fiesta nocturna con amigos",
     "Jazz instrumental y lo-fi relajante para acompañar una cena tranquila",
-    "Rock en español alternativo de los 90s y 2000s (Soda Stereo, Café Tacvba)",
-    "Liquid drum and bass melódico para un viaje largo en coche",
-    "Pop comercial bailable de los 2010s para limpiar la casa",
-    "Blues y soul profundo para un domingo lluvioso",
-    "Reggaeton clásico del perreo viejo y urbano",
+    "Rock en español alternativo de los 90s y 2000s con Soda Stereo y Cafe Tacvba",
+    "Liquid drum and bass melódico para un viaje largo en carretera",
+    "Pop comercial bailable de los 2010s para actividades del hogar",
+    "Blues y soul profundo para un domingo de descanso",
+    "Reggaeton clásico del genero urbano antiguo",
 ]
 
-# Mostramos los ejemplos como botones rápidos seleccionables
-selected_prompt = None
-st.markdown("**💡 Ejemplos recomendados (haz clic para usar):**")
+# Inicializar el índice del carrusel en el session_state
+if "carousel_index" not in st.session_state:
+  st.session_state["carousel_index"] = 0
 
-# Creamos un contenedor desplazable o filas de botones de ejemplo rápidos
-cols_ej = st.columns(2)
-for idx, ej in enumerate(ejemplos):
-  with cols_ej[idx % 2]:
-    if st.button(
-        f"📌 {ej[:45]}...", key=f"ej_{idx}", use_container_width=True
-    ):
-      st.session_state["prompt_input"] = ej
+# Controles de navegación del carrusel en una tarjeta estilo Spotify
+st.markdown('<div class="spotify-card">', unsafe_allow_html=True)
+st.markdown("**Ideas de consultas sugeridas:**")
 
-# Campo de texto principal vinculado al estado para aceptar los ejemplos
+col_prev, col_text, col_next = st.columns([1, 8, 1])
+
+with col_prev:
+  if st.button("<", key="prev_btn", use_container_width=True):
+    st.session_state["carousel_index"] = (
+        st.session_state["carousel_index"] - 1
+    ) % len(ejemplos_prompts)
+
+with col_text:
+  current_example = ejemplos_prompts[st.session_state["carousel_index"]]
+  st.markdown(
+      f"<div style='text-align: center; font-size: 15px; color:"
+      f" #FFFFFF;'><b>[{st.session_state['carousel_index'] + 1}/{len(ejemplos_prompts)}]</b>"
+      f" {current_example}</div>",
+      unsafe_allow_html=True,
+  )
+
+with col_next:
+  if st.button(">", key="next_btn", use_container_width=True):
+    st.session_state["carousel_index"] = (
+        st.session_state["carousel_index"] + 1
+    ) % len(ejemplos_prompts)
+
+# Botón para aplicar el ejemplo actual directamente al campo de texto
+if st.button(
+    "Utilizar este ejemplo seleccionado",
+    key="apply_example",
+    use_container_width=True,
+):
+  st.session_state["prompt_input_field"] = current_example
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# Campo de texto principal vinculado al estado
 prompt_usuario = st.text_area(
-    "¿Qué tipo de playlist quieres crear?",
+    "Describe la musica que deseas generar:",
     value=st.session_state.get(
-        "prompt_input",
-        "Playlist de rock alternativo noventero con toques modernos",
+        "prompt_input_field", ejemplos_prompts[0]
     ),
-    height=100,
-    key="input_prompt_principal",
+    height=90,
+    key="main_prompt_box",
 )
 
-# Controles avanzados de la IA
+# Controles avanzados: Cantidad de canciones, artistas y temperatura
 col_c1, col_c2, col_c3 = st.columns(3)
 with col_c1:
-  num_canciones = st.slider("Canciones", min_value=5, max_value=50, value=20)
+  num_canciones = st.slider(
+      "Cantidad de canciones", min_value=5, max_value=50, value=20
+  )
 with col_c2:
   num_artistas = st.slider(
-      "Artistas dif.", min_value=1, max_value=15, value=6
+      "Artistas distintos", min_value=1, max_value=15, value=6
   )
 with col_c3:
-  # Control de Temperatura (Creatividad / Diversidad)
   temperatura = st.slider(
-      "Creatividad",
+      "Creatividad (Temperatura)",
       min_value=0.0,
       max_value=1.0,
       value=0.7,
-      help=(
-          "Valores bajos (0.1) son más estrictos y fieles al prompt. Valores"
-          " altos (0.9) son más diversos y creativos."
-      ),
+      help="Valores bajos generan resultados estrictos. Valores altos aportan diversidad.",
   )
 
 # Botón de Generación con Gemini
 if st.button(
-    "🪄 Generar Lista con IA", type="primary", use_container_width=True
+    "Generar lista con Inteligencia Artificial",
+    type="primary",
+    use_container_width=True,
 ):
   if not prompt_usuario.strip():
-    st.error("Por favor, introduce una descripción para la playlist.")
+    st.error("Por favor, introduce una descripcion valida.")
   else:
-    with st.spinner("Gemini está curando tu selección musical..."):
+    with st.spinner("Generando seleccion musical..."):
       try:
         ai_client = genai.Client()
 
         instruccion_sistema = (
-            f"Actúa como un DJ profesional y curador musical experto. Genera"
-            f" una lista exacta de {num_canciones} canciones basada en la"
-            f" solicitud del usuario. Debe incluir aproximadamente"
-            f" {num_artistas} artistas diferentes.\n\n"
-            f"REQUISITO ESTRICTO DE FORMATO: Devuelve exclusivamente la lista"
-            f" de canciones en formato de texto plano, una por línea,"
-            f" exactamente con este formato: 'Nombre del Artista - Nombre de la"
-            f" Canción'. No incluyas números, ni viñetas, ni texto introductorio."
+            f"Actúa como un curador musical profesional. Genera una lista"
+            f" exacta de {num_canciones} canciones basada en la solicitud. Debe"
+            f" incluir aproximadamente {num_artistas} artistas diferentes.\n\n"
+            f"REQUISITO ESTRICTO: Devuelve exclusivamente la lista de"
+            f" canciones en formato de texto plano, una por línea, con este"
+            f" formato exacto: 'Artista - Cancion'. Sin números, sin viñetas,"
+            f" sin introducciones."
         )
 
         response = ai_client.models.generate_content(
@@ -123,78 +229,73 @@ if st.button(
         resultado_ia = response.text.strip()
 
         if resultado_ia:
-          st.success("¡Lista generada con éxito por Gemini!")
+          st.success("Lista generada correctamente.")
           st.text_area(
-              "Resultado (Listo para crear o descargar):",
+              "Resultado obtenido:",
               resultado_ia,
-              height=180,
-              key="txt_generado_ia",
+              height=160,
+              key="text_area_resultado_ia",
           )
 
-          # Botón para descargar el TXT generado
           st.download_button(
-              label="📥 Descargar como archivo .txt",
+              label="Descargar archivo de texto",
               data=resultado_ia,
-              file_name="playlist_gemini.txt",
+              file_name="playlist_generada.txt",
               mime="text/plain",
               use_container_width=True,
           )
 
           st.session_state["resultado_lista"] = resultado_ia
         else:
-          st.error("La IA no devolvió resultados. Inténtalo de nuevo.")
+          st.error("No se obtuvieron resultados de la IA.")
 
       except Exception as e:
-        st.error(
-            f"Error al conectar con Gemini: {e}. Comprueba tu GEMINI_API_KEY."
-        )
+        st.error(f"Error al conectar con el servicio de IA: {e}")
 
 st.markdown("---")
 
 # =====================================================================
-# SECCIÓN 2: CREAR EN SPOTIFY (DESDE IA O DESDE ARCHIVO TXT)
+# SECCION 2: ENVIAR A SPOTIFY (DESDE IA O DESDE ARCHIVO TXT)
 # =====================================================================
-st.header("🚀 Enviar a Spotify")
+st.subheader("Exportar a Spotify")
 st.write(
-    "Puedes crear la playlist directamente en tu cuenta usando el resultado de"
-    " arriba o subiendo tu propio archivo de texto."
+    "Selecciona el origen de los datos para crear la playlist de forma automática"
+    " en tu cuenta."
 )
 
 tipo_origen = st.radio(
-    "¿De dónde quieres sacar las canciones?",
+    "Origen de canciones:",
     [
-        "Usar el texto generado por la IA arriba",
-        "Subir mi propio archivo .txt",
+        "Usar el texto generado por la IA",
+        "Subir un archivo de texto externo (.txt)",
     ],
 )
 
 nombre_playlist = st.text_input(
-    "Nombre de la Playlist en Spotify", value="Mi Playlist desde Playlistador"
+    "Nombre de la playlist en Spotify", value="Mi nueva playlist"
 )
 
 texto_a_procesar = ""
 
-if tipo_origen == "Usar el texto generado por la IA arriba":
+if tipo_origen == "Usar el texto generado por la IA":
   if "resultado_lista" in st.session_state:
     texto_a_procesar = st.session_state["resultado_lista"]
   else:
-    st.info("Genera una lista arriba con IA primero para usar esta opción.")
+    st.info("Genera una lista con inteligencia artificial primero.")
 else:
   archivo_subido = st.file_uploader(
-      "Sube tu archivo de canciones (.txt)", type=["txt"]
+      "Sube tu archivo de texto (.txt)", type=["txt"]
   )
   if archivo_subido:
     texto_a_procesar = archivo_subido.getvalue().decode("utf-8")
 
 if st.button(
-    "🎵 Crear Playlist en mi Spotify",
-    type="primary",
-    use_container_width=True,
+    "Crear playlist en Spotify", type="primary", use_container_width=True
 ):
   if not texto_a_procesar.strip():
-    st.error("No hay canciones para procesar. Genera una lista o sube un TXT.")
+    st.error("No hay canciones disponibles para procesar.")
   elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID_REAL":
-    st.error("Configura tus credenciales reales de Spotify en el código.")
+    st.error("Configura tus credenciales de Spotify en el código.")
   else:
     lines = [
         line.strip() for line in texto_a_procesar.splitlines() if line.strip()
@@ -216,7 +317,7 @@ if st.button(
             user=user_id,
             name=nombre_playlist,
             public=True,
-            description="Creada automáticamente con Playlistador Pro & Gemini",
+            description="Creada automáticamente con Playlistador Pro",
         )
         playlist_id = playlist["id"]
 
@@ -237,11 +338,11 @@ if st.button(
           if tracks:
             track_uris.append(tracks[0]["uri"])
             status_text.text(
-                f"✅ Encontrada: {tracks[0]['name']} -"
+                f"Encontrada: {tracks[0]['name']} -"
                 f" {tracks[0]['artists'][0]['name']}"
             )
           else:
-            status_text.text(f"❌ No encontrada: {raw_query}")
+            status_text.text(f"No encontrada: {raw_query}")
 
           progress_bar.progress((i + 1) / len(lines))
           time.sleep(0.1)
@@ -253,10 +354,7 @@ if st.button(
         if track_uris:
           sp.playlist_add_items(playlist_id, track_uris)
 
-        st.success(
-            "🎉 ¡Playlist creada con éxito en tu cuenta de Spotify y lista para"
-            " escuchar!"
-        )
+        st.success("Playlist creada con éxito en tu cuenta de Spotify.")
 
       except Exception as e:
         st.error(f"Error al conectar con Spotify: {e}")
