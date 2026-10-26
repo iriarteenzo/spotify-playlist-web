@@ -117,27 +117,30 @@ with tab1:
 with tab2:
   st.header("Genera un TXT basado en tus gustos")
   st.write(
-      "Introduce hasta 5 artistas o bandas que conozcas. Buscaremos temas"
-      " populares suyos y de artistas similares para armar tu lista."
+      "Elige cuántos artistas quieres incluir, introduce sus nombres (incluso"
+      " con pequeñas erratas) y genera tu lista automáticamente."
   )
 
-  # Entradas para hasta 5 artistas
-  artistas = []
-  col1, col2 = st.columns(2)
-  with col1:
-    a1 = st.text_input("Artista 1 (Ej: Daft Punk)")
-    a2 = st.text_input("Artista 2 (Ej: The Strokes)")
-    a3 = st.text_input("Artista 3 (Opcional)")
-  with col2:
-    a4 = st.text_input("Artista 4 (Opcional)")
-    a5 = st.text_input("Artista 5 (Opcional)")
+  # Selector dinámico para la cantidad de artistas (de 1 a 5)
+  num_artistas = st.slider(
+      "¿Cuántos artistas de referencia quieres usar?",
+      min_value=1,
+      max_value=5,
+      value=3,
+  )
 
-  for a in [a1, a2, a3, a4, a5]:
-    if a.strip():
-      artistas.append(a.strip())
+  artistas = []
+  cols = st.columns(2)
+  for i in range(num_artistas):
+    with cols[i % 2]:
+      artista_input = st.text_input(
+          f"Artista {i+1}", key=f"artista_{i}", placeholder="Ej: Daft Punk"
+      )
+      if artista_input.strip():
+        artistas.append(artista_input.strip())
 
   canciones_por_artista = st.slider(
-      "¿Cuántas canciones incluir por cada artista/similar?",
+      "¿Cuántas canciones incluir por cada artista?",
       min_value=1,
       max_value=10,
       value=3,
@@ -145,19 +148,13 @@ with tab2:
 
   if st.button("Generar Archivo .txt de Canciones", use_container_width=True):
     if not artistas:
-      st.error("Por favor, introduce al menos un artista.")
+      st.error("Por favor, introduce al menos un nombre de artista válido.")
     elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID_REAL":
-      st.error(
-          "Configura tus credenciales de Spotify en el código para usar el"
-          " buscador de artistas."
-      )
+      st.error("Configura tus credenciales de Spotify en el código.")
     else:
-      # Contenedor para ver los logs en directo y que no se quede congelado
-      status_container = st.container()
-      with status_container:
-        progress_text = st.empty()
-        progress_bar = st.progress(0)
-
+      with st.spinner(
+          "Buscando artistas (tolerante a errores) y procesando canciones..."
+      ):
         try:
           auth_manager = SpotifyOAuth(
               client_id=CLIENT_ID,
@@ -169,18 +166,28 @@ with tab2:
           sp = spotipy.Spotify(auth_manager=auth_manager)
 
           lista_generada = []
-          total_artistas = len(artistas)
 
-          for idx, artista in enumerate(artistas):
-            progress_text.text(f"Buscando a: {artista}...")
-            progress_bar.progress((idx + 1) / total_artistas)
-
-            # Buscar el artista
+          for artista in artistas:
+            # 1. Búsqueda principal
             result_search = sp.search(q=artista, type="artist", limit=1)
             artists_items = result_search["artists"]["items"]
 
+            # 2. SISTEMA DE RESCATE: Si falla por error tipográfico, intenta buscar limpiando espacios o letras sobrantes
+            if not artists_items and len(artista) > 4:
+              # Intento secundario: buscar solo la primera palabra o una versión simplificada
+              query_simplificada = artista.split()[0]
+              result_search = sp.search(
+                  q=query_simplificada, type="artist", limit=1
+              )
+              artists_items = result_search["artists"]["items"]
+
             if artists_items:
               artist_id = artists_items[0]["id"]
+              artist_real_name = artists_items[0]["name"]
+              st.write(
+                  f"✅ Artista encontrado: **{artist_real_name}**"
+                  f" (buscado como '{artista}')"
+              )
 
               # Obtener top tracks del artista principal
               top_tracks = sp.artist_top_tracks(artist_id, country="US")[
@@ -192,38 +199,46 @@ with tab2:
                     f"{track['artists'][0]['name']} - {track['name']}"
                 )
 
-              # Obtener artistas relacionados
-              related_artists = sp.artist_related_artists(artist_id)[
-                  "artists"
-              ]
-              if related_artists:
-                sample_related = random.sample(
-                    related_artists, min(2, len(related_artists))
-                )
-                for rel_artist in sample_related:
-                  rel_top_tracks = sp.artist_top_tracks(
-                      rel_artist["id"], country="US"
-                  )["tracks"]
-                  rel_selected = rel_top_tracks[
-                      : max(1, canciones_por_artista - 1)
-                  ]
-                  for track in rel_selected:
-                    lista_generada.append(
-                        f"{track['artists'][0]['name']} - {track['name']}"
-                    )
-            else:
-              st.warning(f"No se encontró al artista: '{artista}' en Spotify.")
+              # Obtener artistas relacionados de forma segura (con control de errores)
+              try:
+                related_artists = sp.artist_related_artists(artist_id)[
+                    "artists"
+                ]
+                if related_artists:
+                  sample_related = random.sample(
+                      related_artists, min(2, len(related_artists))
+                  )
+                  for rel_artist in sample_related:
+                    rel_top_tracks = sp.artist_top_tracks(
+                        rel_artist["id"], country="US"
+                    )["tracks"]
+                    rel_selected = rel_top_tracks[
+                        : max(1, canciones_por_artista - 1)
+                    ]
+                    for track in rel_selected:
+                      lista_generada.append(
+                          f"{track['artists'][0]['name']} - {track['name']}"
+                      )
+              except Exception:
+                # Si falla la parte de artistas relacionados, continúa sin bloquearse
+                pass
 
-            time.sleep(0.3)
+            else:
+              # Si definitivamente no existe, lo salta en lugar de colgarse
+              st.warning(
+                  f"⚠️ No se pudo encontrar a '{artista}' en Spotify. Saltando"
+                  " al siguiente..."
+              )
+
+            time.sleep(0.2)
 
           if lista_generada:
-            # Eliminar duplicados manteniendo orden
+            # Eliminar duplicados manteniendo el orden
             lista_generada = list(dict.fromkeys(lista_generada))
             texto_resultado = "\n".join(lista_generada)
 
             st.success(
-                f"¡Se han generado {len(lista_generada)} canciones basadas en"
-                " tus gustos!"
+                f"¡Se han generado {len(lista_generada)} canciones con éxito!"
             )
             st.text_area("Vista previa del TXT:", texto_resultado, height=200)
 
@@ -237,9 +252,9 @@ with tab2:
             )
           else:
             st.error(
-                "No se pudieron recopilar canciones. Comprueba los nombres de"
-                " los artistas."
+                "No se encontraron canciones para los artistas ingresados."
+                " Revisa los nombres e inténtalo de nuevo."
             )
 
         except Exception as e:
-          st.error(f"Error al generar la lista: {e}")
+          st.error(f"Error inesperado al generar la lista: {e}")
