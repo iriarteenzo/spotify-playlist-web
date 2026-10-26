@@ -15,7 +15,7 @@ REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.ap
 # ======================================================================
 
 st.set_page_config(
-    page_title="plAIlister", page_icon="🎵", layout="centered"
+    page_title="plAIlister", page_icon="P", layout="centered"
 )
 
 # =====================================================================
@@ -141,7 +141,7 @@ st.markdown(
     .stTextInput>div>div>input, 
     .stTextArea>div>div>textarea {
         background-color: #242424 !important;
-        color: #FFFFFF !important;
+        color: #000000 !important;
         border: 1px solid #3E3E3E !important;
         border-radius: 8px;
         padding: 12px;
