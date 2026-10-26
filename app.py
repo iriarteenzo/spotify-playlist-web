@@ -19,27 +19,44 @@ st.set_page_config(
 )
 
 # =====================================================================
-# ESTILOS CSS PERSONALIZADOS (UI / UX ESTILO SPOTIFY)
+# ESTILOS CSS DE NIVEL UX/UI (DISEÑO OBSESIVO ESTILO SPOTIFY)
 # =====================================================================
 st.markdown(
     """
     <style>
+    /* Fondo general de toda la aplicación */
     .stApp {
         background-color: #121212;
         color: #FFFFFF;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
+    /* Forzar fondo oscuro absoluto en la barra lateral */
+    section[data-testid="stSidebar"] {
+        background-color: #000000;
+        border-right: 1px solid #282828;
+    }
+    section[data-testid="stSidebar"] p, 
+    section[data-testid="stSidebar"] span, 
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] h3 {
+        color: #B3B3B3 !important;
+    }
+    section[data-testid="stSidebar"] h3 {
+        color: #FFFFFF !important;
+    }
+
     /* Logo con estilo de ondas en la AI */
     .logo-container {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 24px;
+        font-size: 26px;
         font-weight: 800;
         letter-spacing: -0.5px;
         color: #FFFFFF;
         margin-bottom: 24px;
+        padding-top: 10px;
     }
     .ai-wave-badge {
         display: inline-flex;
@@ -52,75 +69,104 @@ st.markdown(
         font-size: 13px;
         color: #1DB954;
         font-weight: 700;
-        box-shadow: 0 0 10px rgba(29, 185, 84, 0.3);
+        background-color: rgba(29, 185, 84, 0.1);
+        box-shadow: 0 0 12px rgba(29, 185, 84, 0.4);
     }
 
-    /* Tarjetas estilo Spotify */
+    /* Contenedores tipo tarjeta Spotify */
     .spotify-card {
         background-color: #181818;
-        padding: 20px;
-        border-radius: 8px;
+        padding: 24px;
+        border-radius: 12px;
         border: 1px solid #282828;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
+        transition: background-color 0.3s ease;
     }
     .spotify-card:hover {
         background-color: #202020;
+        border-color: #3E3E3E;
     }
 
-    /* Banner superior */
+    /* Banner superior con gradiente inmersivo */
     .banner-box {
-        background: linear-gradient(135deg, #1DB95422 0%, #181818 100%);
+        background: linear-gradient(135deg, rgba(29, 185, 84, 0.15) 0%, #181818 100%);
         border: 1px solid #282828;
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 24px;
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
     }
 
-    /* Botones primarios (Verde Spotify) */
+    /* Botones primarios (Verde Spotify con texto negro de alto contraste) */
     .stButton>button[kind="primary"] {
         background-color: #1DB954 !important;
         color: #000000 !important;
         font-weight: 700;
         border-radius: 500px;
         border: none;
-        padding: 10px 24px;
+        padding: 12px 28px;
         transition: transform 0.1s ease, background-color 0.2s;
+        box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
     }
     .stButton>button[kind="primary"]:hover {
         background-color: #1ed760 !important;
         transform: scale(1.02);
     }
 
-    /* Botones secundarios */
+    /* Botones secundarios oscuros */
     .stButton>button {
         background-color: #282828;
-        color: #FFFFFF;
+        color: #FFFFFF !important;
         border: 1px solid #3E3E3E;
         border-radius: 500px;
         font-weight: 600;
+        padding: 8px 18px;
     }
     .stButton>button:hover {
         border-color: #FFFFFF;
+        background-color: #3E3E3E;
     }
 
-    /* Campos de texto */
-    .stTextInput>div>div>input, .stTextArea>div>div>textarea {
-        background-color: #242424;
-        color: #FFFFFF;
-        border: 1px solid #3E3E3E;
+    /* Corrección radical de Inputs y TextAreas para máxima legibilidad */
+    .stTextInput>div>div>input, 
+    .stTextArea>div>div>textarea {
+        background-color: #242424 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #3E3E3E !important;
         border-radius: 8px;
+        padding: 12px;
+        font-size: 14px;
     }
-    .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
-        border-color: #1DB954;
+    .stTextInput>div>div>input:focus, 
+    .stTextArea>div>div>textarea:focus {
+        border-color: #1DB954 !important;
+        box-shadow: 0 0 0 1px #1DB954 !important;
     }
 
+    /* File Uploader personalizado a modo oscuro */
+    div[data-testid="stFileUploader"] {
+        background-color: #181818;
+        border: 1px dashed #3E3E3E;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    div[data-testid="stFileUploader"] section {
+        background-color: #242424 !important;
+        border: none !important;
+    }
+    div[data-testid="stFileUploader"] span, 
+    div[data-testid="stFileUploader"] small {
+        color: #B3B3B3 !important;
+    }
+
+    /* Tipografía y jerarquía */
     h1, h2, h3 {
-        color: #FFFFFF;
+        color: #FFFFFF !important;
         font-weight: 700;
         letter-spacing: -0.5px;
     }
     p, label {
-        color: #B3B3B3;
+        color: #B3B3B3 !important;
+        font-size: 14px;
     }
     </style>
 """,
@@ -152,10 +198,9 @@ if "show_all_history" not in st.session_state:
   st.session_state["show_all_history"] = False
 
 # =====================================================================
-# BARRA LATERAL (SIDEBAR)
+# BARRA LATERAL (SIDEBAR - OSCURA RIGUROSA)
 # =====================================================================
 with st.sidebar:
-  # Logo plAIlister con la AI encerrada en un círculo con ondas
   st.markdown(
       """
         <div class="logo-container">
@@ -166,9 +211,12 @@ with st.sidebar:
   )
 
   st.markdown("---")
-  st.markdown("### Últimas playlists")
+  st.markdown(
+      "<h3 style='font-size: 15px; text-transform: uppercase; letter-spacing:"
+      " 1px;'>Últimas playlists</h3>",
+      unsafe_allow_html=True,
+  )
 
-  # Mostrar las últimas 5 o todas según el estado de "Ver más"
   limit_display = (
       len(st.session_state["history_playlists"])
       if st.session_state["show_all_history"]
@@ -180,8 +228,8 @@ with st.sidebar:
 
   for pl in recent_playlists:
     st.markdown(
-        f"<p style='color: #FFFFFF; font-size: 14px; margin: 6px"
-        f" 0;'>• {pl}</p>",
+        f"<p style='color: #FFFFFF; font-size: 14px; margin: 8px 0; font-weight:"
+        f" 500;'>• {pl}</p>",
         unsafe_allow_html=True,
     )
 
@@ -198,7 +246,7 @@ with st.sidebar:
 
   st.markdown("---")
   st.markdown(
-      "<p style='font-size: 12px; color: #535353;'>Conectado a Spotify API"
+      "<p style='font-size: 12px; color: #727272;'>Conectado a Spotify API"
       " & Google GenAI</p>",
       unsafe_allow_html=True,
   )
@@ -207,26 +255,30 @@ with st.sidebar:
 # PANTALLA PRINCIPAL
 # =====================================================================
 
-# 1. Espacio en blanco para banner
+# 1. Banner superior
 st.markdown(
     """
     <div class="banner-box">
-        <h1 style="margin: 0; font-size: 32px; color: #FFFFFF;">plAIlister Studio</h1>
+        <h1 style="margin: 0; font-size: 34px; color: #FFFFFF;">plAIlister Studio</h1>
         <p style="margin: 8px 0 0 0; font-size: 15px; color: #1DB954; font-weight: 600;">Inteligencia artificial aplicada a la curación musical conectada con Spotify</p>
     </div>
 """,
     unsafe_allow_html=True,
 )
 
-# 2. Textos de introducción y soluciones ("Usa plAIlister para:")
-st.subheader("Usa plAIlister para:")
+# 2. Textos explicativos y tarjetas de soluciones ("Usa plAIlister para:")
+st.markdown(
+    "<h2 style='font-size: 22px; margin-bottom: 16px;'>Usa plAIlister"
+    " para:</h2>",
+    unsafe_allow_html=True,
+)
 soluciones_cols = st.columns(3)
 with soluciones_cols[0]:
   st.markdown(
       """
         <div class="spotify-card">
-            <b>Generar nuevas playlists con IA</b>
-            <p style="font-size: 13px; margin-top: 6px;">Crea colecciones musicales personalizadas al instante describiendo cualquier concepto o atmósfera.</p>
+            <h3 style="font-size: 16px; color: #FFFFFF; margin-bottom: 8px;">Generar nuevas playlists con IA</h3>
+            <p style="font-size: 13px; line-height: 1.5; margin: 0;">Crea colecciones musicales personalizadas al instante describiendo cualquier concepto o atmósfera.</p>
         </div>
     """,
       unsafe_allow_html=True,
@@ -235,8 +287,8 @@ with soluciones_cols[1]:
   st.markdown(
       """
         <div class="spotify-card">
-            <b>Descubrir nuevos artistas</b>
-            <p style="font-size: 13px; margin-top: 6px;">Explora recomendaciones expertas que cruzan géneros y estilos afines a tus preferencias.</p>
+            <h3 style="font-size: 16px; color: #FFFFFF; margin-bottom: 8px;">Descubrir nuevos artistas</h3>
+            <p style="font-size: 13px; line-height: 1.5; margin: 0;">Explora recomendaciones expertas que cruzan géneros y estilos afines a tus preferencias.</p>
         </div>
     """,
       unsafe_allow_html=True,
@@ -245,24 +297,30 @@ with soluciones_cols[2]:
   st.markdown(
       """
         <div class="spotify-card">
-            <b>Ampliar tus gustos musicales</b>
-            <p style="font-size: 13px; margin-top: 6px;">Evoluciona tu biblioteca con selecciones curadas conectadas directamente a tu cuenta de Spotify.</p>
+            <h3 style="font-size: 16px; color: #FFFFFF; margin-bottom: 8px;">Ampliar tus gustos musicales</h3>
+            <p style="font-size: 13px; line-height: 1.5; margin: 0;">Evoluciona tu biblioteca con selecciones curadas conectadas directamente a tu cuenta de Spotify.</p>
         </div>
     """,
       unsafe_allow_html=True,
   )
 
-st.markdown("---")
+st.markdown("<div style='margin: 32px 0;'></div>", unsafe_allow_html=True)
 
 # =====================================================================
 # 3. BLOQUE DEL GENERADOR DE PLAYLISTS CON IA
 # =====================================================================
-st.subheader("Generador de listas inteligente")
-st.write(
-    "Explora los ejemplos sugeridos o escribe tu propia descripción detallada."
+st.markdown(
+    "<h2 style='font-size: 22px; margin-bottom: 6px;'>Generador de listas"
+    " inteligente</h2>",
+    unsafe_allow_html=True,
+)
+st.markdown(
+    "<p style='margin-bottom: 16px;'>Explora los ejemplos sugeridos o escribe tu"
+    " propia descripción detallada.</p>",
+    unsafe_allow_html=True,
 )
 
-# 10 ejemplos de prompts (sin numerar) que van cambiando en una tarjeta con controles
+# 10 ejemplos de prompts en tarjeta carrusel
 ejemplos_prompts = [
     "Playlist navideña incluyendo a John Mayer, Mariah Carey y Ed Sheeran",
     "Rock clásico de los 80s ideal para correr por la mañana con alta energía",
@@ -277,7 +335,11 @@ ejemplos_prompts = [
 ]
 
 st.markdown('<div class="spotify-card">', unsafe_allow_html=True)
-st.markdown("**Sugerencias de consultas:**")
+st.markdown(
+    "<p style='font-weight: 600; color: #FFFFFF !important; margin-bottom:"
+    " 12px;'>Sugerencias de consultas:</p>",
+    unsafe_allow_html=True,
+)
 
 col_prev, col_text, col_copy, col_next = st.columns([1, 6, 2, 1])
 
@@ -292,7 +354,7 @@ with col_text:
   prompt_actual = ejemplos_prompts[st.session_state["carousel_index"]]
   st.markdown(
       f"<div style='font-size: 14px; color: #FFFFFF; padding-top:"
-      f" 6px;'>{prompt_actual}</div>",
+      f" 8px;'>{prompt_actual}</div>",
       unsafe_allow_html=True,
   )
 
@@ -311,15 +373,15 @@ with col_next:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Campo de texto vinculado al estado para recibir el prompt copiado
+# Campo de texto principal
 prompt_usuario = st.text_area(
     "Describe la música que deseas generar:",
     value=st.session_state.get("prompt_input_field", ""),
-    height=90,
+    height=100,
     key="main_prompt_box",
 )
 
-# Parámetros adicionales de configuración de IA
+# Parámetros avanzados
 col_p1, col_p2, col_p3 = st.columns(3)
 with col_p1:
   num_canciones = st.slider(
@@ -332,24 +394,24 @@ with col_p3:
       "Creatividad", min_value=0.0, max_value=1.0, value=0.7
   )
 
-# Botón dinámico: Generar playlist / Detener
+st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
+
+# Botón dinámico Generar / Detener
 btn_label = "Detener" if st.session_state["is_generating"] else "Generar playlist"
 
 if st.button(btn_label, type="primary", use_container_width=True):
   if not st.session_state["is_generating"]:
-    # Activar estado de generación
     if not prompt_usuario.strip():
       st.error("Por favor, introduce o copia una consulta válida.")
     else:
       st.session_state["is_generating"] = True
       st.rerun()
   else:
-    # Detener generación
     st.session_state["is_generating"] = False
     st.warning("Generación detenida por el usuario.")
     st.rerun()
 
-# Si está en proceso de generación, ejecutar la lógica de Gemini
+# Lógica de ejecución Gemini
 if st.session_state["is_generating"]:
   with st.spinner("Procesando consulta con Gemini..."):
     try:
@@ -382,7 +444,6 @@ if st.session_state["is_generating"]:
         )
         st.session_state["resultado_lista"] = resultado_ia
 
-        # Registrar en el historial de últimas playlists
         nuevo_nombre = prompt_usuario[:25] + "..."
         if nuevo_nombre not in st.session_state["history_playlists"]:
           st.session_state["history_playlists"].append(nuevo_nombre)
@@ -403,15 +464,20 @@ if st.session_state["is_generating"]:
       st.error(f"Error al conectar con la inteligencia artificial: {e}")
       st.rerun()
 
-st.markdown("---")
+st.markdown("<div style='margin: 32px 0;'></div>", unsafe_allow_html=True)
 
 # =====================================================================
-# 4. OPCIÓN 2: SUBIR PLAYLIST EN ARCHIVO .TXT Y ENVIAR A SPOTIFY
+# 4. OPCIÓN ALTERNATIVA: SUBIR TXT Y ENVIAR A SPOTIFY
 # =====================================================================
-st.subheader("Opción alternativa: Subir archivo .txt")
-st.write(
-    "También puedes cargar un archivo de texto con tus canciones para"
-    " transferirlas directamente a Spotify."
+st.markdown(
+    "<h2 style='font-size: 22px; margin-bottom: 6px;'>Opción alternativa: Subir"
+    " archivo .txt</h2>",
+    unsafe_allow_html=True,
+)
+st.markdown(
+    "<p style='margin-bottom: 16px;'>También puedes cargar un archivo de texto"
+    " con tus canciones para transferirlas directamente a Spotify.</p>",
+    unsafe_allow_html=True,
 )
 
 uploaded_file = st.file_uploader(
@@ -425,9 +491,10 @@ texto_a_procesar = ""
 if uploaded_file:
   texto_a_procesar = uploaded_file.getvalue().decode("utf-8")
 elif "resultado_lista" in st.session_state:
-  # Permite usar opcionalmente el generado por IA arriba
   if st.checkbox("Usar la lista generada por IA en su lugar"):
     texto_a_procesar = st.session_state["resultado_lista"]
+
+st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
 
 if st.button("Crear playlist en Spotify", type="primary", use_container_width=True):
   if not texto_a_procesar.strip():
