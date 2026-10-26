@@ -117,16 +117,7 @@ with tab1:
 with tab2:
   st.header("Genera un TXT basado en tus gustos")
   st.write(
-      "Elige cuántos artistas quieres incluir, introduce sus nombres (incluso"
-      " con pequeñas erratas) y genera tu lista automáticamente."
-  )
-
-  # Selector dinámico para la cantidad de artistas (de 1 a 5)
-  num_artistas = st.slider(
-      "¿Cuántos artistas de referencia quieres usar?",
-      min_value=1,
-      max_value=5,
-      value=3,
+      "Genera una playlist automática a partir de tus artistas favoritos."
   )
 
   artistas = []
@@ -138,6 +129,14 @@ with tab2:
       )
       if artista_input.strip():
         artistas.append(artista_input.strip())
+  )
+
+  # Selector dinámico para la cantidad de artistas (de 1 a 5)
+  num_artistas = st.slider(
+      "¿Cuántos artistas de referencia quieres usar?",
+      min_value=1,
+      max_value=5,
+      value=3,
 
   canciones_por_artista = st.slider(
       "¿Cuántas canciones incluir por cada artista?",
