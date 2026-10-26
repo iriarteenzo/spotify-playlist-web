@@ -116,10 +116,17 @@ with tab1:
 # ================= PESTAÑA 2: GENERADOR MÁGICO =================
 with tab2:
   st.header("Genera un TXT basado en tus gustos")
-  st.write(
-      "Genera una playlist automática a partir de tus artistas favoritos."
+  st.write("Genera una playlist automática a partir de tus artistas favoritos.")
+
+  # 1. Primero definimos el selector numérico de artistas
+  num_artistas = st.slider(
+      "¿Cuántos artistas de referencia quieres usar?",
+      min_value=1,
+      max_value=5,
+      value=3,
   )
 
+  # 2. Luego creamos los campos de texto dinámicamente según ese número
   artistas = []
   cols = st.columns(2)
   for i in range(num_artistas):
@@ -129,15 +136,8 @@ with tab2:
       )
       if artista_input.strip():
         artistas.append(artista_input.strip())
-  )
 
-  # Selector dinámico para la cantidad de artistas (de 1 a 5)
-  num_artistas = st.slider(
-      "¿Cuántos artistas de referencia quieres usar?",
-      min_value=1,
-      max_value=5,
-      value=3,
-
+  # 3. Selector de canciones por artista
   canciones_por_artista = st.slider(
       "¿Cuántas canciones incluir por cada artista?",
       min_value=1,
@@ -167,13 +167,12 @@ with tab2:
           lista_generada = []
 
           for artista in artistas:
-            # 1. Búsqueda principal
+            # Búsqueda principal
             result_search = sp.search(q=artista, type="artist", limit=1)
             artists_items = result_search["artists"]["items"]
 
-            # 2. SISTEMA DE RESCATE: Si falla por error tipográfico, intenta buscar limpiando espacios o letras sobrantes
+            # Sistema de rescate ante errores tipográficos
             if not artists_items and len(artista) > 4:
-              # Intento secundario: buscar solo la primera palabra o una versión simplificada
               query_simplificada = artista.split()[0]
               result_search = sp.search(
                   q=query_simplificada, type="artist", limit=1
@@ -198,7 +197,7 @@ with tab2:
                     f"{track['artists'][0]['name']} - {track['name']}"
                 )
 
-              # Obtener artistas relacionados de forma segura (con control de errores)
+              # Obtener artistas relacionados de forma segura
               try:
                 related_artists = sp.artist_related_artists(artist_id)[
                     "artists"
@@ -219,11 +218,9 @@ with tab2:
                           f"{track['artists'][0]['name']} - {track['name']}"
                       )
               except Exception:
-                # Si falla la parte de artistas relacionados, continúa sin bloquearse
                 pass
 
             else:
-              # Si definitivamente no existe, lo salta en lugar de colgarse
               st.warning(
                   f"⚠️ No se pudo encontrar a '{artista}' en Spotify. Saltando"
                   " al siguiente..."
@@ -232,7 +229,6 @@ with tab2:
             time.sleep(0.2)
 
           if lista_generada:
-            # Eliminar duplicados manteniendo el orden
             lista_generada = list(dict.fromkeys(lista_generada))
             texto_resultado = "\n".join(lista_generada)
 
