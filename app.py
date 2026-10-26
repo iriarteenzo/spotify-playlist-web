@@ -47,7 +47,7 @@ st.markdown(
     /* Botones principales estilo Spotify (Verdes) */
     .stButton>button[kind="primary"] {
         background-color: #1DB954 !important;
-        color: #000000 !important;
+        color: #FFFFFF !important;
         font-weight: 700;
         border-radius: 500px;
         border: none;
