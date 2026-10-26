@@ -74,7 +74,7 @@ st.markdown(
 
     /* Campos de texto y inputs */
     .stTextInput>div>div>input, .stTextArea>div>div>textarea {
-        background-color: #242424;
+        background-color: #B3B3B3;
         color: #FFFFFF;
         border: 1px solid #3E3E3E;
         border-radius: 8px;
