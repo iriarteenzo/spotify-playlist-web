@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK V3)
+# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK V4 - CORREGIDO)
 # =====================================================================
 st.markdown(
     """
@@ -95,7 +95,7 @@ st.markdown(
         margin-bottom: 24px;
     }
 
-    /* Tarjetas estáticas visibles (Sin transiciones ni animaciones) */
+    /* Tarjetas estáticas visibles */
     .feature-card {
         background: rgba(255, 255, 255, 0.03);
         padding: 18px 20px;
@@ -149,21 +149,24 @@ st.markdown(
         background-color: #3E3E3E;
     }
 
-    /* Inputs y TextAreas requeridos: Background #d6d6d6, Texto #000000 */
+    /* CORRECCIÓN CRÍTICA: Inputs y TextAreas con fondo #d6d6d6 y TEXTO NEGRO CLARO Y VISIBLE (#000000) */
     .stTextInput>div>div>input, 
     .stTextArea>div>div>textarea {
         background-color: #d6d6d6 !important;
         color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
         border: 1px solid #3E3E3E !important;
         border-radius: 8px;
         padding: 12px;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700 !important;
     }
     .stTextInput>div>div>input:focus, 
     .stTextArea>div>div>textarea:focus {
         border-color: #1DB954 !important;
         box-shadow: 0 0 0 1px #1DB954 !important;
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
     }
 
     /* Sliders con acento en verde Spotify */
@@ -217,11 +220,11 @@ if "history_playlists" not in st.session_state:
       "Acoustic Coffee Morning",
   ]
 
-if "is_generating" not in st.session_state:
-  st.session_state["is_generating"] = False
-
 if "show_all_history" not in st.session_state:
   st.session_state["show_all_history"] = False
+
+if "resultado_lista" not in st.session_state:
+  st.session_state["resultado_lista"] = ""
 
 # =====================================================================
 # BARRA LATERAL (SIDEBAR)
@@ -281,7 +284,7 @@ with st.sidebar:
 # PANTALLA PRINCIPAL
 # =====================================================================
 
-# HERO SECTION ESTÁTICO CON LOGO INTEGRADO Y TODAS LAS TARJETAS VISIBLES
+# HERO SECTION ESTÁTICO
 st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
     """
@@ -303,7 +306,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Tarjetas estáticas visibles simultáneamente (Sin transiciones ni carrusel)
 st.markdown(
     """
     <div class="feature-card">
@@ -326,7 +328,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
 
 # =====================================================================
-# BLOQUE DEL GENERADOR DE PLAYLISTS CON IA (SIN BLOQUE VACÍO NI SUGERENCIAS)
+# BLOQUE DEL GENERADOR DE PLAYLISTS CON IA
 # =====================================================================
 st.markdown(
     "<h2 style='font-size: 22px; margin-bottom: 16px;'>Generador de listas"
@@ -334,7 +336,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Campo de texto principal (Con fondo #d6d6d6 y texto #000000)
+# Campo de texto principal
 prompt_usuario = st.text_area(
     "Describe la música que deseas generar:",
     value="",
@@ -357,73 +359,68 @@ with col_p3:
 
 st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
 
-# Botón dinámico Generar / Detener
-btn_label = "Detener" if st.session_state["is_generating"] else "Generar playlist"
-
-if st.button(btn_label, type="primary", use_container_width=True):
-  if not st.session_state["is_generating"]:
-    if not prompt_usuario.strip():
-      st.error("Por favor, introduce una consulta válida.")
-    else:
-      st.session_state["is_generating"] = True
-      st.rerun()
+# Botón de Generación Directa
+if st.button("Generar playlist", type="primary", use_container_width=True):
+  if not prompt_usuario.strip():
+    st.error(
+        "Por favor, describe la música o los artistas que deseas incluir."
+    )
   else:
-    st.session_state["is_generating"] = False
-    st.warning("Generación detenida por el usuario.")
-    st.rerun()
-
-# Lógica de ejecución Gemini
-if st.session_state["is_generating"]:
-  with st.spinner("Procesando consulta con Gemini..."):
-    try:
-      ai_client = genai.Client()
-      prompt_sistema = (
-          f"Actúa como un curador musical profesional. Genera una lista"
-          f" exacta de {num_canciones} canciones basada en la solicitud. Debe"
-          f" incluir aproximadamente {num_artistas} artistas diferentes.\n\n"
-          f"REQUISITO: Devuelve exclusivamente la lista de canciones en"
-          f" formato de texto plano, una por línea, con el formato exacto:"
-          f" 'Artista - Canción'. Sin números, sin viñetas, sin introducciones."
-      )
-
-      response = ai_client.models.generate_content(
-          model="gemini-2.5-flash",
-          contents=f"{prompt_sistema}\n\nSolicitud: {prompt_usuario}",
-          config=types.GenerateContentConfig(temperature=temperatura),
-      )
-
-      resultado_ia = response.text.strip()
-      st.session_state["is_generating"] = False
-
-      if resultado_ia:
-        st.success("Lista generada con éxito.")
-        st.text_area(
-            "Resultado de IA:",
-            resultado_ia,
-            height=160,
-            key="resultado_ia_box",
+    with st.spinner("Gemini está curando tu selección musical..."):
+      try:
+        ai_client = genai.Client()
+        prompt_sistema = (
+            f"Actúa como un curador musical profesional. Genera una lista"
+            f" exacta de {num_canciones} canciones basada en la solicitud. Debe"
+            f" incluir aproximadamente {num_artistas} artistas diferentes.\n\n"
+            f"REQUISITO: Devuelve exclusivamente la lista de canciones en"
+            f" formato de texto plano, una por línea, con el formato exacto:"
+            f" 'Artista - Canción'. Sin números, sin viñetas, sin introducciones."
         )
-        st.session_state["resultado_lista"] = resultado_ia
 
-        nuevo_nombre = prompt_usuario[:25] + "..."
-        if nuevo_nombre not in st.session_state["history_playlists"]:
-          st.session_state["history_playlists"].append(nuevo_nombre)
-
-        st.download_button(
-            label="Descargar archivo .txt",
-            data=resultado_ia,
-            file_name="playlist_generada.txt",
-            mime="text/plain",
-            use_container_width=True,
+        response = ai_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"{prompt_sistema}\n\nSolicitud: {prompt_usuario}",
+            config=types.GenerateContentConfig(temperature=temperatura),
         )
-      else:
-        st.error("La IA no devolvió resultados.")
-        st.rerun()
 
-    except Exception as e:
-      st.session_state["is_generating"] = False
-      st.error(f"Error al conectar con la inteligencia artificial: {e}")
-      st.rerun()
+        resultado_ia = response.text.strip()
+
+        if resultado_ia:
+          st.success("¡Lista generada con éxito!")
+          st.session_state["resultado_lista"] = resultado_ia
+
+          nuevo_nombre = prompt_usuario[:25] + "..."
+          if nuevo_nombre not in st.session_state["history_playlists"]:
+            st.session_state["history_playlists"].append(nuevo_nombre)
+        else:
+          st.error("La IA no devolvió resultados. Inténtalo de nuevo.")
+
+      except Exception as e:
+        st.error(f"Error al conectar con la inteligencia artificial: {e}")
+
+# Visualización y edición de la playlist generada por IA
+if st.session_state["resultado_lista"]:
+  st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
+  st.markdown(
+      "<h3>Vista previa de la playlist generada (Puedes editarla antes de"
+      " enviarla):</h3>",
+      unsafe_allow_html=True,
+  )
+  st.session_state["resultado_lista"] = st.text_area(
+      "Canciones (Artista - Canción):",
+      value=st.session_state["resultado_lista"],
+      height=180,
+      key="editable_result_box",
+  )
+
+  st.download_button(
+      label="Descargar lista como archivo .txt",
+      data=st.session_state["resultado_lista"],
+      file_name="playlist_ia.txt",
+      mime="text/plain",
+      use_container_width=True,
+  )
 
 st.markdown("<div style='margin: 36px 0;'></div>", unsafe_allow_html=True)
 
@@ -431,36 +428,48 @@ st.markdown("<div style='margin: 36px 0;'></div>", unsafe_allow_html=True)
 # OPCIÓN ALTERNATIVA: SUBIR TXT Y ENVIAR A SPOTIFY
 # =====================================================================
 st.markdown(
-    "<h2 style='font-size: 22px; margin-bottom: 6px;'>Opción alternativa: Subir"
-    " archivo .txt</h2>",
+    "<h2 style='font-size: 22px; margin-bottom: 6px;'>Exportar a Spotify</h2>",
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<p style='margin-bottom: 16px;'>También puedes cargar un archivo de texto"
-    " con tus canciones para transferirlas directamente a Spotify.</p>",
+    "<p style='margin-bottom: 16px;'>Puedes usar el resultado generado arriba"
+    " o subir un archivo de texto externo (.txt) para pasarlo a tu"
+    " cuenta.</p>",
     unsafe_allow_html=True,
 )
 
-uploaded_file = st.file_uploader(
-    "Sube tu archivo de canciones (.txt)", type=["txt"]
+tipo_origen = st.radio(
+    "Origen de las canciones:",
+    [
+        "Usar la lista generada por IA de arriba",
+        "Subir un archivo .txt externo",
+    ],
 )
+
+uploaded_file = None
+if tipo_origen == "Subir un archivo .txt externo":
+  uploaded_file = st.file_uploader(
+      "Sube tu archivo de canciones (.txt)", type=["txt"]
+  )
+
 nombre_playlist = st.text_input(
     "Nombre de la playlist en Spotify", value="Mi nueva playlist"
 )
 
 texto_a_procesar = ""
-if uploaded_file:
-  texto_a_procesar = uploaded_file.getvalue().decode("utf-8")
-elif "resultado_lista" in st.session_state:
-  if st.checkbox("Usar la lista generada por IA en su lugar"):
-    texto_a_procesar = st.session_state["resultado_lista"]
+if tipo_origen == "Usar la lista generada por IA de arriba":
+  texto_a_procesar = st.session_state.get("resultado_lista", "")
+else:
+  if uploaded_file:
+    texto_a_procesar = uploaded_file.getvalue().decode("utf-8")
 
 st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
 
 if st.button("Crear playlist en Spotify", type="primary", use_container_width=True):
   if not texto_a_procesar.strip():
     st.error(
-        "No hay canciones disponibles. Genera con IA o sube un archivo .txt."
+        "No hay canciones disponibles para procesar. Genera una lista con IA o"
+        " sube un archivo."
     )
   elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID_REAL":
     st.error("Configura tus credenciales reales de Spotify en el código.")
@@ -522,7 +531,7 @@ if st.button("Crear playlist en Spotify", type="primary", use_container_width=Tr
         if track_uris:
           sp.playlist_add_items(playlist_id, track_uris)
 
-        st.success("Playlist creada con éxito en tu cuenta de Spotify.")
+        st.success("¡Playlist creada con éxito en tu cuenta de Spotify!")
 
       except Exception as e:
         st.error(f"Error al conectar con Spotify: {e}")
