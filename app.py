@@ -12,9 +12,7 @@ CLIENT_SECRET = "ce6c0302d9b147aabdcd3f8f4a62bab0"
 REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/"  # O pon http://localhost:8888 si lo pruebas en local
 # ======================================================================
 
-st.set_page_config(
-    page_title="Playlistador", page_icon="P", layout="centered"
-)
+st.set_page_config(page_title="Playlistador", page_icon="P", layout="centered")
 
 st.title("Playlistador")
 st.write(
@@ -23,9 +21,7 @@ st.write(
 )
 
 # Pestañas para organizar la herramienta de forma limpia y moderna
-tab1, tab2 = st.tabs(
-    ["Crear playlist desde TXT", "Genera tu playlist"]
-)
+tab1, tab2 = st.tabs(["Crear playlist desde TXT", "Genera tu playlist"])
 
 # ================= PESTAÑA 1: CREAR PLAYLIST =================
 with tab1:
@@ -42,7 +38,7 @@ with tab1:
       type="primary",
       use_container_width=True,
   ):
-    if not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID":
+    if not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID_REAL":
       st.error(
           "Por favor, configura tus credenciales de Spotify en el código"
           " antes de continuar."
@@ -72,7 +68,7 @@ with tab1:
               user=user_id,
               name=playlist_name_input,
               public=True,
-              description="Creada automáticamente desde Spotify Playlist Studio",
+              description="Creada automáticamente desde Playlistador",
           )
           playlist_id = playlist["id"]
 
@@ -150,7 +146,7 @@ with tab2:
   if st.button("Generar Archivo .txt de Canciones", use_container_width=True):
     if not artistas:
       st.error("Por favor, introduce al menos un artista.")
-    elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID":
+    elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID_REAL":
       st.error(
           "Configura tus credenciales de Spotify en el código para usar el"
           " buscador de artistas."
@@ -176,7 +172,6 @@ with tab2:
 
             if artists_items:
               artist_id = artists_items[0]["id"]
-              artist_name = artists_items[0]["name"]
 
               # Obtener top tracks del artista principal
               top_tracks = sp.artist_top_tracks(artist_id, country="US")[
@@ -192,7 +187,6 @@ with tab2:
               related_artists = sp.artist_related_artists(artist_id)[
                   "artists"
               ]
-              # Seleccionar un par de artistas similares aleatorios
               sample_related = random.sample(
                   related_artists, min(2, len(related_artists))
               )
