@@ -23,12 +23,30 @@ st.set_page_config(
 # =====================================================================
 st.markdown(
     """
-    <style>
+<style>
+    /* Google Fonts Import */
+    @import url('https://googleapis.com');
+
     /* Fondo general de la aplicación */
     .stApp {
         background-color: #121212;
         color: #FFFFFF;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Títulos de álbumes o playlists principales */
+    .stApp h1, .stApp h2 {
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    /* Subtextos o metadata (ej. Duración de canción, nombre de artista) */
+    .stApp .metadata {
+        color: #A7A7A7;
+        font-weight: 400;
+    }
+</style>
+
     }
     
     /* Barra lateral en negro absoluto */
