@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK V2 - CORREGIDO Y PULIDO)
+# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK V3)
 # =====================================================================
 st.markdown(
     """
@@ -73,35 +73,49 @@ st.markdown(
         box-shadow: 0 0 12px rgba(29, 185, 84, 0.4);
     }
 
-    /* Hero Section Minimalista sin marcos pesados */
+    /* Hero Section Minimalista */
     .hero-container {
-        padding: 20px 0 30px 0;
+        padding: 10px 0 20px 0;
         text-align: left;
     }
     .hero-title {
-        font-size: 42px;
+        font-size: 40px;
         font-weight: 800;
         color: #FFFFFF;
         letter-spacing: -1px;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
     .hero-subtitle {
-        font-size: 22px;
+        font-size: 20px;
         color: #1DB954;
         font-weight: 600;
-        margin-bottom: 16px;
+        margin-bottom: 24px;
     }
 
-    /* Tarjetas contenedoras sutiles */
-    .spotify-card {
-        background-color: #181818;
-        padding: 24px;
-        border-radius: 12px;
-        border: 1px solid #282828;
-        margin-bottom: 20px;
+    /* Tarjetas estáticas visibles (Sin transiciones ni animaciones) */
+    .feature-card {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 18px 20px;
+        border-radius: 10px;
+        border-left: 3px solid #1DB954;
+        margin-bottom: 12px;
+    }
+    .feature-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #FFFFFF;
+        margin-bottom: 4px;
+    }
+    .feature-desc {
+        font-size: 13px;
+        color: #B3B3B3;
+        line-height: 1.4;
     }
 
-    /* BOTONES PRIMARIOS: Verde Spotify con TEXTO NEGRO PURO OBLIGATORIO */
+    /* BOTONES PRIMARIOS: Verde Spotify con TEXTO NEGRO PURO */
     .stButton>button[kind="primary"] {
         background-color: #1DB954 !important;
         color: #000000 !important;
@@ -111,7 +125,6 @@ st.markdown(
         border: none !important;
         padding: 12px 28px !important;
         box-shadow: 0 4px 14px rgba(29, 185, 84, 0.4);
-        transition: transform 0.1s ease, background-color 0.2s;
     }
     .stButton>button[kind="primary"] p,
     .stButton>button[kind="primary"] span {
@@ -120,7 +133,6 @@ st.markdown(
     }
     .stButton>button[kind="primary"]:hover {
         background-color: #1ed760 !important;
-        transform: scale(1.01);
     }
 
     /* Botones secundarios oscuros */
@@ -137,15 +149,16 @@ st.markdown(
         background-color: #3E3E3E;
     }
 
-    /* Inputs y TextAreas optimizados (CORREGIDO: texto blanco legible) */
+    /* Inputs y TextAreas requeridos: Background #d6d6d6, Texto #000000 */
     .stTextInput>div>div>input, 
     .stTextArea>div>div>textarea {
-        background-color: #B3B3B3 !important;
+        background-color: #d6d6d6 !important;
         color: #000000 !important;
         border: 1px solid #3E3E3E !important;
         border-radius: 8px;
         padding: 12px;
         font-size: 14px;
+        font-weight: 600;
     }
     .stTextInput>div>div>input:focus, 
     .stTextArea>div>div>textarea:focus {
@@ -153,7 +166,12 @@ st.markdown(
         box-shadow: 0 0 0 1px #1DB954 !important;
     }
 
-    /* File Uploader estilo oscuro */
+    /* Sliders con acento en verde Spotify */
+    div[data-baseweb="slider"] div[role="slider"] {
+        background-color: #1DB954 !important;
+    }
+
+    /* File Uploader estilizado y texto de botón upload en #3e3e3e */
     div[data-testid="stFileUploader"] {
         background-color: #181818;
         border: 1px dashed #3E3E3E;
@@ -161,12 +179,16 @@ st.markdown(
         padding: 20px;
     }
     div[data-testid="stFileUploader"] section {
-        background-color: #242424 !important;
+        background-color: #d6d6d6 !important;
         border: none !important;
+    }
+    div[data-testid="stFileUploader"] button {
+        color: #3e3e3e !important;
+        font-weight: 700 !important;
     }
     div[data-testid="stFileUploader"] span, 
     div[data-testid="stFileUploader"] small {
-        color: #B3B3B3 !important;
+        color: #555555 !important;
     }
 
     h1, h2, h3 {
@@ -194,15 +216,6 @@ if "history_playlists" not in st.session_state:
       "80s Synthwave Drive",
       "Acoustic Coffee Morning",
   ]
-
-if "carousel_index" not in st.session_state:
-  st.session_state["carousel_index"] = 0
-
-if "hero_carousel_index" not in st.session_state:
-  st.session_state["hero_carousel_index"] = 0
-
-if "prompt_input_field" not in st.session_state:
-  st.session_state["prompt_input_field"] = ""
 
 if "is_generating" not in st.session_state:
   st.session_state["is_generating"] = False
@@ -268,33 +281,16 @@ with st.sidebar:
 # PANTALLA PRINCIPAL
 # =====================================================================
 
-# HERO SECTION CON CARRUSEL DE FUNCIONALIDADES (SIN MARCOS)
-hero_solutions = [
-    {
-        "title": "Generar nuevas playlists con IA",
-        "desc": (
-            "Crea colecciones musicales personalizadas al instante"
-            " describiendo cualquier concepto, género o atmósfera."
-        ),
-    },
-    {
-        "title": "Descubrir nuevos artistas",
-        "desc": (
-            "Explora recomendaciones expertas basadas en algoritmos de"
-            " inteligencia artificial que cruzan estilos musicales afines."
-        ),
-    },
-    {
-        "title": "Ampliar tus gustos musicales",
-        "desc": (
-            "Evoluciona tu biblioteca con selecciones inteligentes conectadas"
-            " directamente a tu cuenta de Spotify."
-        ),
-    },
-]
-
+# HERO SECTION ESTÁTICO CON LOGO INTEGRADO Y TODAS LAS TARJETAS VISIBLES
 st.markdown('<div class="hero-container">', unsafe_allow_html=True)
-st.markdown('<div class="hero-title">plAIlister Studio</div>', unsafe_allow_html=True)
+st.markdown(
+    """
+    <div class="hero-title">
+        pl<span><div class="ai-wave-badge" style="width: 32px; height: 32px; font-size: 16px;">AI</div></span>lister Studio
+    </div>
+""",
+    unsafe_allow_html=True,
+)
 st.markdown(
     '<div class="hero-subtitle">Inteligencia artificial aplicada a la curación'
     " musical con Spotify</div>",
@@ -303,43 +299,34 @@ st.markdown(
 
 st.markdown(
     "<div style='font-size: 15px; color: #FFFFFF; font-weight: 700; margin-top:"
-    " 20px; margin-bottom: 8px;'>Usa plAIlister para:</div>",
+    " 16px; margin-bottom: 12px;'>Usa plAIlister para:</div>",
     unsafe_allow_html=True,
 )
 
-# Carrusel dinámico del Hero Section con controles de navegación
-h_prev, h_text, h_next = st.columns([1, 10, 1])
-with h_prev:
-  if st.button("<", key="hero_prev", use_container_width=True):
-    st.session_state["hero_carousel_index"] = (
-        st.session_state["hero_carousel_index"] - 1
-    ) % len(hero_solutions)
-    st.rerun()
-
-with h_text:
-  current_hero = hero_solutions[st.session_state["hero_carousel_index"]]
-  st.markdown(
-      f"""
-        <div style='background: rgba(255,255,255,0.03); padding: 18px 24px; border-radius: 10px; border-left: 3px solid #1DB954;'>
-            <div style='font-size: 16px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;'>{current_hero['title']}</div>
-            <div style='font-size: 14px; color: #B3B3B3;'>{current_hero['desc']}</div>
-        </div>
-    """,
-      unsafe_allow_html=True,
-  )
-
-with h_next:
-  if st.button(">", key="hero_next", use_container_width=True):
-    st.session_state["hero_carousel_index"] = (
-        st.session_state["hero_carousel_index"] + 1
-    ) % len(hero_solutions)
-    st.rerun()
+# Tarjetas estáticas visibles simultáneamente (Sin transiciones ni carrusel)
+st.markdown(
+    """
+    <div class="feature-card">
+        <div class="feature-title">Generar nuevas playlists con IA</div>
+        <div class="feature-desc">Crea colecciones musicales personalizadas al instante describiendo cualquier concepto, género o atmósfera.</div>
+    </div>
+    <div class="feature-card">
+        <div class="feature-title">Descubrir nuevos artistas</div>
+        <div class="feature-desc">Explora recomendaciones expertas basadas en algoritmos de inteligencia artificial que cruzan estilos musicales afines.</div>
+    </div>
+    <div class="feature-card">
+        <div class="feature-title">Ampliar tus gustos musicales</div>
+        <div class="feature-desc">Evoluciona tu biblioteca con selecciones inteligentes conectadas directamente a tu cuenta de Spotify.</div>
+    </div>
+""",
+    unsafe_allow_html=True,
+)
 
 st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
 
 # =====================================================================
-# BLOQUE DEL GENERADOR DE PLAYLISTS CON IA
+# BLOQUE DEL GENERADOR DE PLAYLISTS CON IA (SIN BLOQUE VACÍO NI SUGERENCIAS)
 # =====================================================================
 st.markdown(
     "<h2 style='font-size: 22px; margin-bottom: 16px;'>Generador de listas"
@@ -347,63 +334,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 10 ejemplos de prompts en carrusel minimalista
-ejemplos_prompts = [
-    "Playlist navideña incluyendo a John Mayer, Mariah Carey y Ed Sheeran",
-    "Rock clásico de los 80s ideal para correr por la mañana con alta energía",
-    "Indie pop y bedroom pop suave para trabajar o concentrarse por la tarde",
-    "Tech house y minimal para una sesión de fiesta nocturna con amigos",
-    "Jazz instrumental y lo-fi relajante para acompañar una cena tranquila",
-    "Rock en español alternativo de los 90s y 2000s con Soda Stereo y Café Tacvba",
-    "Liquid drum and bass melódico para un viaje largo en carretera",
-    "Pop comercial bailable de los 2010s para actividades del hogar",
-    "Blues y soul profundo para un domingo de descanso",
-    "Reggaeton clásico del género urbano antiguo",
-]
-
-st.markdown('<div class="spotify-card">', unsafe_allow_html=True)
-st.markdown(
-    "<p style='font-weight: 600; color: #FFFFFF !important; margin-bottom:"
-    " 12px;'>Sugerencias de consultas:</p>",
-    unsafe_allow_html=True,
-)
-
-col_prev, col_text, col_copy, col_next = st.columns([1, 6, 2, 1])
-
-with col_prev:
-  if st.button("<", key="prev_prompt", use_container_width=True):
-    st.session_state["carousel_index"] = (
-        st.session_state["carousel_index"] - 1
-    ) % len(ejemplos_prompts)
-    st.rerun()
-
-with col_text:
-  prompt_actual = ejemplos_prompts[st.session_state["carousel_index"]]
-  st.markdown(
-      f"<div style='font-size: 14px; color: #FFFFFF; padding-top:"
-      f" 8px;'>{prompt_actual}</div>",
-      unsafe_allow_html=True,
-  )
-
-with col_copy:
-  if st.button("Copiar prompt", key="btn_copiar_prompt", use_container_width=True):
-    st.session_state["prompt_input_field"] = prompt_actual
-    st.success("Prompt copiado al campo.")
-    st.rerun()
-
-with col_next:
-  if st.button(">", key="next_prompt", use_container_width=True):
-    st.session_state["carousel_index"] = (
-        st.session_state["carousel_index"] + 1
-    ) % len(ejemplos_prompts)
-    st.rerun()
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-# Campo de texto principal con legibilidad corregida
+# Campo de texto principal (Con fondo #d6d6d6 y texto #000000)
 prompt_usuario = st.text_area(
     "Describe la música que deseas generar:",
-    value=st.session_state.get("prompt_input_field", ""),
+    value="",
     height=100,
     key="main_prompt_box",
 )
@@ -423,13 +357,13 @@ with col_p3:
 
 st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
 
-# Botón dinámico Generar / Detener con contraste perfecto asegurado
+# Botón dinámico Generar / Detener
 btn_label = "Detener" if st.session_state["is_generating"] else "Generar playlist"
 
 if st.button(btn_label, type="primary", use_container_width=True):
   if not st.session_state["is_generating"]:
     if not prompt_usuario.strip():
-      st.error("Por favor, introduce o copia una consulta válida.")
+      st.error("Por favor, introduce una consulta válida.")
     else:
       st.session_state["is_generating"] = True
       st.rerun()
