@@ -13,10 +13,10 @@ REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.ap
 # ======================================================================
 
 st.set_page_config(
-    page_title="Spotify Playlist Studio", page_icon="🎵", layout="centered"
+    page_title="Playlistador", page_icon="P", layout="centered"
 )
 
-st.title("🎵 Spotify Playlist Studio")
+st.title("Playlistador")
 st.write(
     "Genera listas a partir de tus artistas favoritos o sube tu propio archivo"
     " de texto para crear playlists en segundos."
@@ -24,31 +24,31 @@ st.write(
 
 # Pestañas para organizar la herramienta de forma limpia y moderna
 tab1, tab2 = st.tabs(
-    ["🚀 Crear Playlist desde TXT", "✨ Generador Mágico de Artistas"]
+    ["Crear playlist desde TXT", "Genera tu playlist"]
 )
 
 # ================= PESTAÑA 1: CREAR PLAYLIST =================
 with tab1:
   st.header("Sube tu archivo y crea la playlist")
   playlist_name_input = st.text_input(
-      "Nombre de la Playlist", value="Mi Playlist desde Web"
+      "Nombre de la playlist", value="Mi nueva playlist"
   )
   uploaded_file = st.file_uploader(
       "Sube tu archivo de canciones (.txt)", type=["txt"]
   )
 
   if st.button(
-      "🚀 Procesar y Crear en Spotify",
+      "Crear playlist",
       type="primary",
       use_container_width=True,
   ):
     if not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID":
       st.error(
-          "⚠️ Por favor, configura tus credenciales de Spotify en el código"
+          "Por favor, configura tus credenciales de Spotify en el código"
           " antes de continuar."
       )
     elif not uploaded_file:
-      st.error("⚠️ Por favor, sube un archivo .txt con las canciones.")
+      st.error("Por favor, sube un archivo .txt con las canciones.")
     else:
       with st.spinner("Conectando con Spotify y procesando canciones..."):
         try:
@@ -112,14 +112,14 @@ with tab1:
           if track_uris:
             sp.playlist_add_items(playlist_id, track_uris)
 
-          st.success("🎉 ¡Playlist creada con éxito en tu cuenta de Spotify!")
+          st.success("¡Playlist creada con éxito en tu cuenta de Spotify!")
 
         except Exception as e:
           st.error(f"Ocurrió un error durante el proceso: {e}")
 
 # ================= PESTAÑA 2: GENERADOR MÁGICO =================
 with tab2:
-  st.header("✨ Genera un TXT basado en tus gustos")
+  st.header("Genera un TXT basado en tus gustos")
   st.write(
       "Introduce hasta 5 artistas o bandas que conozcas. Buscaremos temas"
       " populares suyos y de artistas similares para armar tu lista."
@@ -147,12 +147,12 @@ with tab2:
       value=3,
   )
 
-  if st.button("🪄 Generar Archivo .txt de Canciones", use_container_width=True):
+  if st.button("Generar Archivo .txt de Canciones", use_container_width=True):
     if not artistas:
-      st.error("⚠️ Por favor, introduce al menos un artista.")
+      st.error("Por favor, introduce al menos un artista.")
     elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID":
       st.error(
-          "⚠️ Configura tus credenciales de Spotify en el código para usar el"
+          "Configura tus credenciales de Spotify en el código para usar el"
           " buscador de artistas."
       )
     else:
@@ -222,7 +222,7 @@ with tab2:
 
           # Botón de descarga directa del .txt
           st.download_button(
-              label="📥 Descargar archivo .txt",
+              label="Descargar archivo .txt",
               data=texto_resultado,
               file_name="playlist_generada.txt",
               mime="text/plain",
