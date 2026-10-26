@@ -51,7 +51,7 @@ st.markdown(
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 26px;
+        font-size: 32px;
         font-weight: 800;
         letter-spacing: -0.5px;
         color: #FFFFFF;
@@ -66,9 +66,9 @@ st.markdown(
         border-radius: 50%;
         width: 38px;
         height: 38px;
-        font-size: 13px;
+        font-size: 20px;
         color: #1DB954;
-        font-weight: 700;
+        font-weight: 900;
         background-color: rgba(29, 185, 84, 0.1);
         box-shadow: 0 0 12px rgba(29, 185, 84, 0.4);
     }
@@ -79,20 +79,20 @@ st.markdown(
         text-align: left;
     }
     .hero-title {
-        font-size: 38px;
+        font-size: 42px;
         font-weight: 800;
         color: #FFFFFF;
         letter-spacing: -1px;
         margin-bottom: 8px;
     }
     .hero-subtitle {
-        font-size: 18px;
+        font-size: 22px;
         color: #1DB954;
         font-weight: 600;
         margin-bottom: 16px;
     }
     .hero-carousel-text {
-        font-size: 16px;
+        font-size: 20px;
         color: #B3B3B3;
         line-height: 1.6;
         min-height: 50px;
@@ -100,10 +100,10 @@ st.markdown(
 
     /* Tarjetas contenedoras sutiles */
     .spotify-card {
-        background-color: #181818;
+        background-color: #121212;
         padding: 24px;
         border-radius: 12px;
-        border: 1px solid #282828;
+        border: 1px solid #121212;
         margin-bottom: 20px;
     }
 
@@ -146,7 +146,7 @@ st.markdown(
     .stTextInput>div>div>input, 
     .stTextArea>div>div>textarea {
         background-color: #242424 !important;
-        color: #FFFFFF !important;
+        color: #000000 !important;
         border: 1px solid #3E3E3E !important;
         border-radius: 8px;
         padding: 12px;
@@ -313,13 +313,7 @@ st.markdown(
 )
 
 # Carrusel dinámico del Hero Section
-h_prev, h_text, h_next = st.columns([1, 10, 1])
-with h_prev:
-  if st.button("<", key="hero_prev", use_container_width=True):
-    st.session_state["hero_carousel_index"] = (
-        st.session_state["hero_carousel_index"] - 1
-    ) % len(hero_solutions)
-    st.rerun()
+h_text = st.columns([10])
 
 with h_text:
   current_hero = hero_solutions[st.session_state["hero_carousel_index"]]
@@ -332,13 +326,6 @@ with h_text:
     """,
       unsafe_allow_html=True,
   )
-
-with h_next:
-  if st.button(">", key="hero_next", use_container_width=True):
-    st.session_state["hero_carousel_index"] = (
-        st.session_state["hero_carousel_index"] + 1
-    ) % len(hero_solutions)
-    st.rerun()
 
 st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
