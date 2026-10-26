@@ -15,11 +15,11 @@ REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.ap
 # ======================================================================
 
 st.set_page_config(
-    page_title="PlAIlister", page_icon="P", layout="centered"
+    page_title="plAIlister", page_icon="🎵", layout="centered"
 )
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK V2)
+# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK V2 - CORREGIDO Y PULIDO)
 # =====================================================================
 st.markdown(
     """
@@ -91,19 +91,13 @@ st.markdown(
         font-weight: 600;
         margin-bottom: 16px;
     }
-    .hero-carousel-text {
-        font-size: 20px;
-        color: #B3B3B3;
-        line-height: 1.6;
-        min-height: 50px;
-    }
 
     /* Tarjetas contenedoras sutiles */
     .spotify-card {
-        background-color: #121212;
+        background-color: #181818;
         padding: 24px;
         border-radius: 12px;
-        border: 1px solid #121212;
+        border: 1px solid #282828;
         margin-bottom: 20px;
     }
 
@@ -119,7 +113,8 @@ st.markdown(
         box-shadow: 0 4px 14px rgba(29, 185, 84, 0.4);
         transition: transform 0.1s ease, background-color 0.2s;
     }
-    .stButton>button[kind="primary"] p {
+    .stButton>button[kind="primary"] p,
+    .stButton>button[kind="primary"] span {
         color: #000000 !important;
         font-weight: 800 !important;
     }
@@ -142,11 +137,11 @@ st.markdown(
         background-color: #3E3E3E;
     }
 
-    /* Inputs y TextAreas optimizados */
+    /* Inputs y TextAreas optimizados (CORREGIDO: texto blanco legible) */
     .stTextInput>div>div>input, 
     .stTextArea>div>div>textarea {
         background-color: #242424 !important;
-        color: #000000 !important;
+        color: #FFFFFF !important;
         border: 1px solid #3E3E3E !important;
         border-radius: 8px;
         padding: 12px;
@@ -312,8 +307,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Carrusel dinámico del Hero Section
-h_text = st.columns([10])
+# Carrusel dinámico del Hero Section con controles de navegación
+h_prev, h_text, h_next = st.columns([1, 10, 1])
+with h_prev:
+  if st.button("<", key="hero_prev", use_container_width=True):
+    st.session_state["hero_carousel_index"] = (
+        st.session_state["hero_carousel_index"] - 1
+    ) % len(hero_solutions)
+    st.rerun()
 
 with h_text:
   current_hero = hero_solutions[st.session_state["hero_carousel_index"]]
@@ -326,6 +327,13 @@ with h_text:
     """,
       unsafe_allow_html=True,
   )
+
+with h_next:
+  if st.button(">", key="hero_next", use_container_width=True):
+    st.session_state["hero_carousel_index"] = (
+        st.session_state["hero_carousel_index"] + 1
+    ) % len(hero_solutions)
+    st.rerun()
 
 st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
@@ -392,7 +400,7 @@ with col_next:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Campo de texto principal
+# Campo de texto principal con legibilidad corregida
 prompt_usuario = st.text_area(
     "Describe la música que deseas generar:",
     value=st.session_state.get("prompt_input_field", ""),
@@ -415,7 +423,7 @@ with col_p3:
 
 st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
 
-# Botón dinámico Generar / Detener (Con contraste de texto negro absoluto forzado)
+# Botón dinámico Generar / Detener con contraste perfecto asegurado
 btn_label = "Detener" if st.session_state["is_generating"] else "Generar playlist"
 
 if st.button(btn_label, type="primary", use_container_width=True):
@@ -526,7 +534,7 @@ if st.button("Crear playlist en Spotify", type="primary", use_container_width=Tr
     lines = [
         line.strip() for line in texto_a_procesar.splitlines() if line.strip()
     ]
-    with st.spinner(f"Conectandoกับ Spotify y procesando {len(lines)} temas..."):
+    with st.spinner(f"Conectando con Spotify y procesando {len(lines)} temas..."):
       try:
         auth_manager = SpotifyOAuth(
             client_id=CLIENT_ID,
