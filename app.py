@@ -140,7 +140,7 @@ st.markdown(
     /* Inputs y TextAreas optimizados (CORREGIDO: texto blanco legible) */
     .stTextInput>div>div>input, 
     .stTextArea>div>div>textarea {
-        background-color: #242424 !important;
+        background-color: #B3B3B3 !important;
         color: #000000 !important;
         border: 1px solid #3E3E3E !important;
         border-radius: 8px;
