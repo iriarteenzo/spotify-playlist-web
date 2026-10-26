@@ -152,7 +152,12 @@ with tab2:
           " buscador de artistas."
       )
     else:
-      with st.spinner("Buscando canciones y artistas similares..."):
+      # Contenedor para ver los logs en directo y que no se quede congelado
+      status_container = st.container()
+      with status_container:
+        progress_text = st.empty()
+        progress_bar = st.progress(0)
+
         try:
           auth_manager = SpotifyOAuth(
               client_id=CLIENT_ID,
@@ -164,9 +169,13 @@ with tab2:
           sp = spotipy.Spotify(auth_manager=auth_manager)
 
           lista_generada = []
+          total_artistas = len(artistas)
 
-          for artista in artistas:
-            # Buscar el artista para obtener su ID y artistas relacionados
+          for idx, artista in enumerate(artistas):
+            progress_text.text(f"Buscando a: {artista}...")
+            progress_bar.progress((idx + 1) / total_artistas)
+
+            # Buscar el artista
             result_search = sp.search(q=artista, type="artist", limit=1)
             artists_items = result_search["artists"]["items"]
 
@@ -183,46 +192,54 @@ with tab2:
                     f"{track['artists'][0]['name']} - {track['name']}"
                 )
 
-              # Obtener artistas relacionados para enriquecer la playlist
+              # Obtener artistas relacionados
               related_artists = sp.artist_related_artists(artist_id)[
                   "artists"
               ]
-              sample_related = random.sample(
-                  related_artists, min(2, len(related_artists))
-              )
+              if related_artists:
+                sample_related = random.sample(
+                    related_artists, min(2, len(related_artists))
+                )
+                for rel_artist in sample_related:
+                  rel_top_tracks = sp.artist_top_tracks(
+                      rel_artist["id"], country="US"
+                  )["tracks"]
+                  rel_selected = rel_top_tracks[
+                      : max(1, canciones_por_artista - 1)
+                  ]
+                  for track in rel_selected:
+                    lista_generada.append(
+                        f"{track['artists'][0]['name']} - {track['name']}"
+                    )
+            else:
+              st.warning(f"No se encontró al artista: '{artista}' en Spotify.")
 
-              for rel_artist in sample_related:
-                rel_top_tracks = sp.artist_top_tracks(
-                    rel_artist["id"], country="US"
-                )["tracks"]
-                rel_selected = rel_top_tracks[: max(1, canciones_por_artista - 1)]
-                for track in rel_selected:
-                  lista_generada.append(
-                      f"{track['artists'][0]['name']} - {track['name']}"
-                  )
+            time.sleep(0.3)
 
-          # Eliminar duplicados manteniendo orden
-          lista_generada = list(dict.fromkeys(lista_generada))
+          if lista_generada:
+            # Eliminar duplicados manteniendo orden
+            lista_generada = list(dict.fromkeys(lista_generada))
+            texto_resultado = "\n".join(lista_generada)
 
-          texto_resultado = "\n".join(lista_generada)
+            st.success(
+                f"¡Se han generado {len(lista_generada)} canciones basadas en"
+                " tus gustos!"
+            )
+            st.text_area("Vista previa del TXT:", texto_resultado, height=200)
 
-          st.success(
-              f"¡Se han generado {len(lista_generada)} canciones basadas en tus"
-              " gustos!"
-          )
-
-          # Mostrar vista previa en la web
-          st.text_area("Vista previa del TXT:", texto_resultado, height=200)
-
-          # Botón de descarga directa del .txt
-          st.download_button(
-              label="Descargar archivo .txt",
-              data=texto_resultado,
-              file_name="playlist_generada.txt",
-              mime="text/plain",
-              type="primary",
-              use_container_width=True,
-          )
+            st.download_button(
+                label="Descargar archivo .txt",
+                data=texto_resultado,
+                file_name="playlist_generada.txt",
+                mime="text/plain",
+                type="primary",
+                use_container_width=True,
+            )
+          else:
+            st.error(
+                "No se pudieron recopilar canciones. Comprueba los nombres de"
+                " los artistas."
+            )
 
         except Exception as e:
           st.error(f"Error al generar la lista: {e}")
