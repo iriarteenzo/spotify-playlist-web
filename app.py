@@ -1,25 +1,25 @@
 from google import genai
 from google.genai import types
-import random
 import re
 import time
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import streamlit as st
 
-# ================= CONFIGURACIÓN DE TUS CREDENCIALES =================
-# (Sustituye los asteriscos por tus credenciales reales de Spotify Developer)
+# =====================================================================
+# CONFIGURACIÓN DE CREDENCIALES DE SPOTIFY
+# =====================================================================
 CLIENT_ID = "ce6c0302d9b147aabdcd3f8f4a62bab0"
 CLIENT_SECRET = "ce6c0302d9b147aabdcd3f8f4a62bab0"
 REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/"  # O pon http://localhost:8888 si lo pruebas en local
-# ======================================================================
+# =====================================================================
 
 st.set_page_config(
-    page_title="plAIlister", page_icon="P", layout="centered"
+    page_title="plAIlister", page_icon="🎵", layout="centered"
 )
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK V4 - CORREGIDO)
+# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - CORREGIDO DEFINITIVO)
 # =====================================================================
 st.markdown(
     """
@@ -149,9 +149,12 @@ st.markdown(
         background-color: #3E3E3E;
     }
 
-    /* CORRECCIÓN CRÍTICA: Inputs y TextAreas con fondo #d6d6d6 y TEXTO NEGRO CLARO Y VISIBLE (#000000) */
-    .stTextInput>div>div>input, 
-    .stTextArea>div>div>textarea {
+    /* FORZADO ABSOLUTO DE INPUTS Y TEXTAREAS: Fondo #d6d6d6 y Texto #000000 */
+    .stTextInput input, 
+    .stTextArea textarea,
+    div[data-baseweb="input"] input,
+    div[data-baseweb="base-input"] input,
+    textarea.stTextArea {
         background-color: #d6d6d6 !important;
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
@@ -161,8 +164,8 @@ st.markdown(
         font-size: 14px;
         font-weight: 700 !important;
     }
-    .stTextInput>div>div>input:focus, 
-    .stTextArea>div>div>textarea:focus {
+    .stTextInput input:focus, 
+    .stTextArea textarea:focus {
         border-color: #1DB954 !important;
         box-shadow: 0 0 0 1px #1DB954 !important;
         color: #000000 !important;
@@ -359,7 +362,7 @@ with col_p3:
 
 st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
 
-# Botón de Generación Directa
+# Botón de Generación Directa actualizado al modelo gemini-3.8-flash
 if st.button("Generar playlist", type="primary", use_container_width=True):
   if not prompt_usuario.strip():
     st.error(
@@ -379,7 +382,7 @@ if st.button("Generar playlist", type="primary", use_container_width=True):
         )
 
         response = ai_client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             contents=f"{prompt_sistema}\n\nSolicitud: {prompt_usuario}",
             config=types.GenerateContentConfig(temperature=temperatura),
         )
