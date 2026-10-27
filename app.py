@@ -46,475 +46,245 @@ SPOTIFY_REDIRECT_URI = get_secret(
 ).rstrip("/")
 
 
-# ============================================================
-# 2. DESIGN SYSTEM
-# ============================================================
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 
-COLORS = {
-    "background": "#121212",
-    "sidebar": "#090909",
-    "surface": "#1E1E1E",
-    "surface_hover": "#292929",
-    "border": "#383838",
-    "text": "#F5F5F5",
-    "text_secondary": "#E5E5E5",
-    "muted": "#A7A7A7",
-    "green": "#1ED760",
-    "green_hover": "#3BE477",
-    "green_text": "#07150B",
-    "danger": "#FF7777",
+/* ==========================================
+   1. SISTEMA DE VARIABLES (MODO CLARO / OSCURO)
+   ================================---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --panel: #1a1a1a;
+    --panel-sub: #222222;
+    --panel-hover: #2a2a2a;
+    --border: #333333;
+    --border-focus: #555555;
+    --text: rgba(255,255,255,0.92);
+    --muted: rgba(255,255,255,0.60);
+    --input-bg: #181818;
+    --sidebar-bg: #0a0a0a;
+  }
 }
 
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;450;500;550;600;650;700&display=swap');
-
-    :root {
-        --bg: #121212;
-        --sidebar: #090909;
-        --surface: #1e1e1e;
-        --surface-hover: #292929;
-        --border: #383838;
-        --text: #f5f5f5;
-        --text-secondary: #e5e5e5;
-        --muted: #a7a7a7;
-        --green: #1ed760;
-        --green-hover: #3be477;
-        --green-text: #07150b;
-        --radius: 18px;
-        --radius-small: 12px;
-        --control-height: 46px;
-        --space: 16px;
-    }
-
-    html, body, [class*="css"], [data-testid="stApp"] {
-        font-family: "Google Sans", Arial, sans-serif !important;
-    }
-
-    * {
-        box-sizing: border-box;
-    }
-
-    .stApp {
-        background: var(--bg);
-        color: var(--text);
-    }
-
-    header[data-testid="stHeader"] {
-        background: transparent;
-    }
-
-    #MainMenu, footer {
-        visibility: hidden;
-    }
-
-    .block-container {
-        max-width: 940px;
-        padding: 28px 30px 24px !important;
-    }
-
-    /* Main layout */
-
-    .brand {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        color: var(--text);
-        font-size: 27px;
-        line-height: 1.2;
-        letter-spacing: -1.2px;
-        font-weight: 700;
-        margin: 0 0 28px;
-    }
-
-    .brand-ai {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 25px;
-        height: 25px;
-        border: 2px solid var(--green);
-        color: var(--green);
-        border-radius: 50%;
-        font-size: 10px;
-        letter-spacing: -.3px;
-        margin: 0 1px;
-    }
-
-    .eyebrow {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        color: var(--green);
-        margin-bottom: 12px;
-    }
-
-    .muted {
-        color: var(--muted);
-        font-size: 15px;
-        line-height: 1.65;
-    }
-
-    h1, h2, h3 {
-        color: var(--text) !important;
-        font-family: "Google Sans", Arial, sans-serif !important;
-        letter-spacing: -1px;
-    }
-
-    h1 {
-        font-size: clamp(30px, 4vw, 42px) !important;
-        line-height: 1.15 !important;
-        font-weight: 600 !important;
-        margin-bottom: 12px !important;
-    }
-
-    h2 {
-        font-size: 26px !important;
-        font-weight: 600 !important;
-    }
-
-    p, label, .stMarkdown {
-        font-family: "Google Sans", Arial, sans-serif !important;
-    }
-
-    /* Sidebar */
-
-    section[data-testid="stSidebar"] {
-        background: var(--sidebar);
-        border-right: 1px solid #292929;
-    }
-
-    section[data-testid="stSidebar"] > div {
-        padding: 25px 18px 22px;
-    }
-
-    section[data-testid="stSidebar"] p,
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] .stMarkdown,
-    section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
-        color: rgba(255, 255, 255, .90) !important;
-    }
-
-    section[data-testid="stSidebar"] .stCaption {
-        color: rgba(255, 255, 255, .70) !important;
-    }
-
-    section[data-testid="stSidebar"] hr {
-        border-color: #333333;
-        margin: 18px 0;
-    }
-
-    section[data-testid="stSidebar"] .stButton > button {
-        width: 100%;
-    }
-
-    .sidebar-heading {
-        color: rgba(255, 255, 255, .90);
-        font-size: 12px;
-        font-weight: 650;
-        letter-spacing: .7px;
-        text-transform: uppercase;
-        margin: 4px 0 12px;
-    }
-
-    /* Inputs */
-
-    div[data-testid="stTextArea"] textarea,
-    div[data-testid="stTextInput"] input {
-        background: var(--surface) !important;
-        color: var(--text) !important;
-        border: 1px solid var(--border) !important;
-        border-radius: var(--radius-small) !important;
-        font-family: "Google Sans", Arial, sans-serif !important;
-        font-size: 15px !important;
-        padding: 15px 16px !important;
-        box-shadow: none !important;
-    }
-
-    div[data-testid="stTextArea"] textarea {
-        line-height: 1.65 !important;
-        resize: vertical;
-    }
-
-    div[data-testid="stTextArea"] textarea:focus,
-    div[data-testid="stTextInput"] input:focus {
-        border-color: #777777 !important;
-        box-shadow: 0 0 0 1px #777777 !important;
-    }
-
-    textarea::placeholder,
-    input::placeholder {
-        color: #999999 !important;
-        opacity: 1 !important;
-    }
-
-    div[data-testid="stTextArea"] label,
-    div[data-testid="stTextInput"] label {
-        color: var(--text-secondary) !important;
-        font-weight: 550 !important;
-        margin-bottom: 8px;
-    }
-
-    /* Buttons: one design system */
-
-    .stButton > button,
-    .stLinkButton > a,
-    div[data-testid="stFormSubmitButton"] button {
-        min-height: var(--control-height) !important;
-        border-radius: 999px !important;
-        padding: 0 20px !important;
-        font-family: "Google Sans", Arial, sans-serif !important;
-        font-size: 14px !important;
-        font-weight: 8 !important;
-        line-height: 1.2 !important;
-        border: 1px solid #494949 !important;
-        background: #292929 !important;
-        color: var(--text) !important;
-        box-shadow: none !important;
-        transition: background .15s ease, border-color .15s ease;
-    }
-
-    .stButton > button:hover,
-    .stLinkButton > a:hover {
-        background: #363636 !important;
-        border-color: #666666 !important;
-        color: #000000 !important;
-    }
-
-    .stButton > button:focus-visible,
-    .stLinkButton > a:focus-visible {
-        outline: 2px solid var(--green) !important;
-        outline-offset: 3px !important;
-    }
-
-    .stButton > button[kind="primary"],
-    div[data-testid="stFormSubmitButton"] button,
-    .stLinkButton > a[kind="primary"] {
-        background: var(--green) !important;
-        border-color: var(--green) !important;
-        color: var(--green-text) !important;
-    }
-
-    .stButton > button[kind="primary"]:hover,
-    div[data-testid="stFormSubmitButton"] button:hover,
-    .stLinkButton > a[kind="primary"]:hover {
-        background: var(--green-hover) !important;
-        border-color: var(--green-hover) !important;
-        color: var(--green-text) !important;
-    }
-
-    /* Composer */
-
-    .composer {
-        background: var(--surface);
-        border: 1px solid #393939;
-        border-radius: 23px;
-        padding: 20px;
-        margin-top: 25px;
-        margin-bottom: 14px;
-    }
-
-    .composer-hint {
-        color: #999999;
-        font-size: 12px;
-        line-height: 1.5;
-        padding: 8px 2px 0;
-    }
-
-    .st-key-prompt_input textarea {
-        min-height: 115px !important;
-        background: transparent !important;
-        border: 0 !important;
-        padding: 8px 2px !important;
-        font-size: 16px !important;
-    }
-
-    .st-key-prompt_input textarea:focus {
-        box-shadow: none !important;
-        border: 0 !important;
-    }
-
-    .st-key-prompt_input [data-baseweb="textarea"] {
-        border: 0 !important;
-        box-shadow: none !important;
-        background: transparent !important;
-    }
-
-    .st-key-prompt_input {
-        margin-bottom: 10px;
-    }
-
-    .st-key-adjust_button button,
-    .st-key-generate_button button {
-        width: 100% !important;
-        height: 48px !important;
-        min-height: 48px !important;
-        border-radius: 999px !important;
-    }
-
-    /* Slider */
-
-    div[data-testid="stSlider"] [data-baseweb="slider"] div[role="slider"] {
-        background: var(--green) !important;
-        border-color: var(--green) !important;
-    }
-
-    div[data-testid="stSlider"] [data-testid="stTickBar"] {
-        background: var(--green) !important;
-    }
-
-    .slider-labels {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        margin-top: -4px;
-        margin-bottom: 12px;
-    }
-
-    .slider-side {
-        flex: 1;
-        font-size: 11px;
-        color: #a7a7a7;
-        line-height: 1.5;
-    }
-
-    .slider-side strong {
-        display: block;
-        color: #f5f5f5;
-        font-size: 11px;
-        letter-spacing: .7px;
-        margin-bottom: 3px;
-    }
-
-    .slider-side:last-child {
-        text-align: right;
-    }
-
-    /* Modal */
-
-    div[data-testid="stDialog"] > div,
-    div[role="dialog"] {
-        background: #181818 !important;
-        border: 1px solid #393939 !important;
-        border-radius: 24px !important;
-    }
-
-    div[data-testid="stDialog"] h2 {
-        font-size: 25px !important;
-    }
-
-    /* Tracks */
-
-    .track-row {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        padding: 15px 5px;
-        border-bottom: 1px solid #303030;
-    }
-
-    .track-index {
-        width: 25px;
-        flex-shrink: 0;
-        color: #909090;
-        font-size: 13px;
-    }
-
-    .track-title {
-        color: #f5f5f5;
-        font-size: 14px;
-        font-weight: 600;
-        line-height: 1.45;
-    }
-
-    .track-artist {
-        color: #c0c0c0;
-        font-size: 13px;
-        margin-top: 3px;
-    }
-
-    .track-album {
-        color: #909090;
-        font-size: 12px;
-        margin-top: 3px;
-    }
-
-    .track-link {
-        color: var(--green);
-        text-decoration: none;
-        font-size: 12px;
-        white-space: nowrap;
-    }
-
-    .result-card {
-        background: #1d1d1d;
-        border: 1px solid #383838;
-        border-radius: 18px;
-        padding: 22px;
-        margin: 16px 0;
-    }
-
-    .status-note {
-        color: #b8b8b8;
-        font-size: 13px;
-        line-height: 1.55;
-    }
-
-    div[data-testid="stAlert"] {
-        border-radius: 14px;
-    }
-
-    div[data-testid="stExpander"] {
-        background: #191919;
-        border: 1px solid #373737;
-        border-radius: 14px;
-    }
-
-    hr {
-        border-color: #303030;
-    }
-
-    /* Keep the create screen within the viewport when possible. */
-    @media (min-width: 761px) {
-        .stApp:has(.st-key-prompt_input) .main .block-container {
-            padding-top: 25px !important;
-        }
-
-        .stApp:has(.st-key-prompt_input) .main {
-            min-height: calc(100vh - 30px);
-        }
-    }
-
-    @media (max-width: 760px) {
-        .block-container {
-            padding: 20px 16px 26px !important;
-        }
-
-        .brand {
-            margin-bottom: 22px;
-        }
-
-        .composer {
-            padding: 14px;
-            border-radius: 19px;
-            margin-top: 20px;
-        }
-
-        h1 {
-            font-size: 31px !important;
-        }
-
-        .st-key-prompt_input textarea {
-            min-height: 100px !important;
-        }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f8f9fa;
+    --panel: #ffffff;
+    --panel-sub: #f1f3f5;
+    --panel-hover: #e9ecef;
+    --border: #dee2e6;
+    --border-focus: #adb5bd;
+    --text: #212529;
+    --muted: #6c757d;
+    --input-bg: #ffffff;
+    --sidebar-bg: #f1f3f5;
+  }
+}
+
+:root {
+  --green: #1ed760;
+  --green-hover: #1abc54;
+}
+
+/* ==========================================
+   2. ESTILOS GLOBALES Y TIPOGRAFÍA
+   ================================---------- */
+.stApp {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Google Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.block-container {
+  max-width: 760px;
+  padding: 32px 20px 48px;
+}
+
+header[data-testid="stHeader"] {
+  background: transparent;
+}
+
+h1, h2, h3 {
+  font-family: 'DM Serif Display', Georgia, serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -.35px;
+  line-height: 1.15;
+  color: var(--text);
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 2.8rem) !important;
+  margin-bottom: 12px !important;
+}
+
+p, label, input, textarea, button {
+  font-family: 'Google Sans', sans-serif;
+  color: var(--text);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.eyebrow {
+  color: var(--green);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  margin-bottom: 24px;
+  color: var(--text);
+}
+
+.brand-ai {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--green);
+  border-radius: 50%;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ==========================================
+   3. COMPONENTES Y CONTENEDORES
+   ================================---------- */
+.st-key-prompt_shell {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+.st-key-prompt_shell textarea {
+  min-height: 140px !important;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  color: var(--text) !important;
+  font-size: 15px !important;
+  padding: 14px !important;
+}
+
+.st-key-prompt_shell textarea:focus {
+  border-color: var(--green) !important;
+  box-shadow: 0 0 0 1px var(--green) !important;
+}
+
+.result-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+section[data-testid="stSidebar"] {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+}
+
+/* ==========================================
+   4. BOTONES Y VARIANTES
+   ================================---------- */
+.stButton > button, 
+.stLinkButton > a {
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel-sub);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 16px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.stButton > button:hover, 
+.stLinkButton > a:hover {
+  border-color: var(--border-focus);
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.stButton > button[kind="primary"] {
+  background: var(--green) !important;
+  border-color: var(--green) !important;
+  color: #07150b !important;
+  font-weight: 700 !important;
+}
+
+.stButton > button[kind="primary"]:hover {
+  background: var(--green-hover) !important;
+  border-color: var(--green-hover) !important;
+}
+
+/* ==========================================
+   5. LISTADO DE CANCIONES Y RESPONSIVIDAD
+   ================================---------- */
+.track-row {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 4px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--panel);
+}
+
+.track-index {
+  color: var(--muted);
+  width: 24px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.track-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.track-artist, 
+.track-album {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .block-container {
+    padding: 16px 12px 32px;
+  }
+  h1 {
+    font-size: 2rem !important;
+  }
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ============================================================
 # 3. ICONOGRAFÍA SVG
