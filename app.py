@@ -1,7 +1,5 @@
 import html
-import json
 import os
-import re
 import secrets
 import time
 
@@ -45,7 +43,7 @@ SPOTIFY_REDIRECT_URI = get_secret(
 
 
 # =========================================================
-# DESIGN SYSTEM UNIFICADO
+# DESIGN SYSTEM
 # =========================================================
 
 st.markdown("""
@@ -91,7 +89,8 @@ header[data-testid="stHeader"] {
     padding: 28px 28px 32px !important;
 }
 
-/* Tipografía y Jerarquías */
+/* Tipografía */
+
 h1, h2, h3, p, label, input, textarea, button {
     font-family: var(--font) !important;
 }
@@ -138,6 +137,7 @@ p {
 }
 
 /* Marca */
+
 .brand {
     display: flex;
     align-items: center;
@@ -164,6 +164,7 @@ p {
 }
 
 /* Barra lateral */
+
 section[data-testid="stSidebar"] {
     background: #090909;
     border-right: 1px solid #292929;
@@ -194,7 +195,8 @@ section[data-testid="stSidebar"] hr {
     margin-bottom: 12px;
 }
 
-/* Sistema Unificado de Botones */
+/* Botones */
+
 .stButton > button,
 .stLinkButton > a,
 div[data-testid="stFormSubmitButton"] button {
@@ -245,7 +247,8 @@ div[data-testid="stFormSubmitButton"] button:hover,
     outline-offset: 3px !important;
 }
 
-/* Campos de Texto */
+/* Campos */
+
 div[data-testid="stTextArea"] textarea,
 div[data-testid="stTextInput"] input {
     background: var(--surface) !important;
@@ -271,7 +274,11 @@ input::placeholder {
     opacity: 1 !important;
 }
 
-div[data-testid="stTextArea"] label,
+/* Ocultar etiquetas flotantes duplicadas en text_area para evitar elementos fantasma */
+div[data-testid="stTextArea"] label {
+    display: none !important;
+}
+
 div[data-testid="stTextInput"] label {
     color: var(--text) !important;
     font-size: 13px !important;
@@ -280,6 +287,7 @@ div[data-testid="stTextInput"] label {
 }
 
 /* Composer */
+
 .composer {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -314,7 +322,8 @@ div[data-testid="stTextInput"] label {
     height: 46px !important;
 }
 
-/* Sliders */
+/* Slider */
+
 div[data-testid="stSlider"] [role="slider"] {
     background: var(--green) !important;
     border-color: var(--green) !important;
@@ -346,13 +355,16 @@ div[data-testid="stSlider"] [role="slider"] {
     text-align: right;
 }
 
-/* Modales y Listados */
+/* Modal */
+
 div[data-testid="stDialog"] > div,
 div[role="dialog"] {
     background: #181818 !important;
     border: 1px solid var(--border) !important;
     border-radius: 20px !important;
 }
+
+/* Canciones */
 
 .track-row {
     display: flex;
@@ -412,18 +424,23 @@ hr {
     border-color: #303030;
 }
 
+/* Adaptación móvil */
+
 @media (max-width: 760px) {
     .block-container {
         padding: 20px 16px 28px !important;
     }
+
     .brand {
         margin-bottom: 22px;
     }
+
     .composer {
         padding: 14px;
         border-radius: 16px;
         margin-top: 20px;
     }
+
     h1 {
         font-size: 31px !important;
     }
@@ -433,7 +450,7 @@ hr {
 
 
 # =========================================================
-# ICONOGRAFÍA SVG
+# ICONOS
 # =========================================================
 
 ICONS = {
@@ -545,87 +562,71 @@ def spotify_connect_button():
 
 
 # =========================================================
-# GENERACIÓN GEMINI (CON PLAN A, PLAN B Y PLAN C)
+# GEMINI
 # =========================================================
 
 def generate_tracks(prompt, count, artist_count, temperature):
     client = genai.Client(api_key=GEMINI_API_KEY)
 
-    # Definición de estrategias (Plan A, Plan B, Plan C) para garantizar resultados
-    strategies = [
-        # Plan A: Directiva Estándar Estricta
-        f"""Actúa como curador musical experto.
-Devuelve únicamente JSON válido con esta estructura exacta:
+    instructions = f"""
+Actúa como curador musical experto.
+
+Devuelve únicamente JSON válido con esta estructura:
 {{"tracks":[{{"artist":"artista","title":"canción"}}]}}
 
-Genera exactamente {count} canciones reales y distintas de aproximadamente {artist_count} artistas diferentes.
-Respeta el género, época, idioma, ambiente y referencias del usuario. No inventes canciones. Sin Markdown adicional.""",
+Genera {count} canciones reales y distintas de aproximadamente
+{artist_count} artistas diferentes.
 
-        # Plan B: Enfoque Flexible en formato de listado JSON estructurado plano
-        f"""Eres un selector musical profesional. Genera una lista de {count} temas musicales basados en la solicitud del usuario.
-Devuelve tu respuesta en un objeto JSON válido con la clave raíz "tracks", conteniendo un arreglo de objetos con las propiedades "artist" y "title".
-No uses bloques de texto markdown de código si no es estrictamente un JSON plano.""",
+Respeta el género, época, idioma, ambiente, referencias y exclusiones
+del usuario. No inventes canciones. Evita duplicados.
+No incluyas explicaciones ni Markdown.
+"""
 
-        # Plan C: Alternativa de Respaldo Amplia por Categorías Esenciales
-        f"""Crea un repertorio musical con {count} canciones que se ajusten al estilo pedido.
-Debes responder obligatoriamente y exclusivamente en formato JSON estructurado así:
-{{"tracks":[{{"artist":"Nombre del Artista","title":"Nombre de la Canción"}}]}}"""
-    ]
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
+        config=types.GenerateContentConfig(
+            temperature=temperature,
+            response_mime_type="application/json",
+        ),
+    )
 
-    last_exception = None
+    import json
 
-    for attempt, instructions in enumerate(strategies):
-        try:
-            response = client.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
-                config=types.GenerateContentConfig(
-                    temperature=temperature + (attempt * 0.1), # Incrementa ligeramente la temperatura en planes alternativos
-                    response_mime_type="application/json",
-                ),
-            )
+    try:
+        data = json.loads(response.text or "")
+    except json.JSONDecodeError as exc:
+        raise ValueError("Gemini devolvió una respuesta no válida.") from exc
 
-            raw_text = response.text or ""
-            
-            # Limpieza defensiva de bloques markdown por si el modelo los incluye a pesar de las instrucciones
-            cleaned_text = re.sub(r"^```json\s*", "", raw_text.strip(), flags=re.IGNORECASE)
-            cleaned_text = re.sub(r"^```\s*", "", cleaned_text, flags=re.IGNORECASE)
-            cleaned_text = re.sub(r"\s*```$", "", cleaned_text.strip())
+    tracks = []
+    seen = set()
 
-            data = json.loads(cleaned_text)
-            
-            tracks = []
-            seen = set()
-
-            for item in data.get("tracks", []):
-                if not isinstance(item, dict):
-                    continue
-
-                artist = str(item.get("artist", "")).strip()
-                title = str(item.get("title", "")).strip()
-                key = (artist.casefold(), title.casefold())
-
-                if artist and title and key not in seen:
-                    tracks.append({"artist": artist, "title": title})
-                    seen.add(key)
-
-                if len(tracks) == count:
-                    break
-
-            if len(tracks) >= max(3, count // 2): # Si logramos al menos un volumen razonable de canciones válidas, aceptamos el plan
-                return tracks
-
-        except Exception as exc:
-            last_exception = exc
+    for item in data.get("tracks", []):
+        if not isinstance(item, dict):
             continue
 
-    raise ValueError(
-        f"No se pudo completar la generación musical tras aplicar los planes alternativos. Error técnico: {last_exception}"
-    )
+        artist = str(item.get("artist", "")).strip()
+        title = str(item.get("title", "")).strip()
+        key = (artist.casefold(), title.casefold())
+
+        if artist and title and key not in seen:
+            tracks.append({"artist": artist, "title": title})
+            seen.add(key)
+
+        if len(tracks) == count:
+            break
+
+    if len(tracks) < count:
+        raise ValueError(
+            f"Solo se recibieron {len(tracks)} canciones válidas "
+            f"de las {count} solicitadas. Prueba otra petición."
+        )
+
+    return tracks
 
 
 # =========================================================
-# BÚSQUEDA DE CANCIONES EN SPOTIFY
+# BÚSQUEDA DE CANCIONES
 # =========================================================
 
 def find_spotify_tracks(sp, tracks):
@@ -798,7 +799,7 @@ with st.sidebar:
     st.markdown('<div class="sidebar-label">Playlists</div>',
                 unsafe_allow_html=True)
 
-    if st.button("＋  Nueva playlist", type="primary",
+    if st.button("＋   Nueva playlist", type="primary",
                  use_container_width=True):
         reset_app()
         st.rerun()
@@ -841,7 +842,7 @@ with st.sidebar:
 
 
 # =========================================================
-# CREAR PLAYLIST (PÁGINA PRINCIPAL)
+# CREAR PLAYLIST
 # =========================================================
 
 if st.session_state.step == "create":
@@ -876,13 +877,13 @@ if st.session_state.step == "create":
     left, right = st.columns(2, gap="medium")
 
     with left:
-        if st.button("⚙  Ajustes", key="adjust_button",
+        if st.button("⚙   Ajustes", key="adjust_button",
                      use_container_width=True):
             settings_dialog()
 
     with right:
         generate = st.button(
-            "Generar playlist  ↗",
+            "Generar playlist   ↗",
             key="generate_button",
             type="primary",
             use_container_width=True,
@@ -905,7 +906,7 @@ if st.session_state.step == "create":
             st.error("Configura GEMINI_API_KEY en los Secrets.")
         else:
             try:
-                with st.spinner("Creando tu selección musical (Plan A / B / C)…"):
+                with st.spinner("Creando tu selección musical…"):
                     tracks = generate_tracks(
                         prompt,
                         st.session_state.count,
@@ -957,7 +958,7 @@ elif st.session_state.step == "review":
 
     with right:
         search_clicked = st.button(
-            "Buscar en Spotify  ↗",
+            "Buscar en Spotify   ↗",
             type="primary",
             use_container_width=True,
         )
@@ -966,7 +967,7 @@ elif st.session_state.step == "review":
         edited = []
 
         for line in st.session_state.review_text.splitlines():
-            match = re.match(
+            match = __import__("re").match(
                 r"^\s*(.+?)\s+[–—-]\s+(.+?)\s*$",
                 line,
             )
@@ -1138,7 +1139,7 @@ elif st.session_state.step == "success":
     url = st.session_state.get("playlist_url", "")
     if url:
         st.link_button(
-            "Abrir playlist en Spotify  ↗",
+            "Abrir playlist en Spotify   ↗",
             url,
             type="primary",
             use_container_width=True,
