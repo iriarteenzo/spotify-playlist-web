@@ -463,52 +463,50 @@ def connect_spotify():
 
     if not state:
         import secrets
-
         state = secrets.token_urlsafe(24)
         st.session_state.oauth_state = state
 
     spotify_url = oauth.get_authorize_url(state=state)
 
-st.markdown(
-    f"""
-    <a href="{html.escape(spotify_url, quote=True)}"
-       target="_self"
-       style="
-         display:flex;
-         align-items:center;
-         justify-content:center;
-         gap:12px;
-         width:100%;
-         min-height:48px;
-         box-sizing:border-box;
-         padding:12px 16px;
-         border-radius:14px;
-         background:#1ed760;
-         color:#07150b;
-         font-family:'Google Sans',sans-serif;
-         font-size:14px;
-         font-weight:700;
-         text-decoration:none;
-       ">
-      <svg width="24" height="24" viewBox="0 0 24 24"
-           aria-hidden="true" style="flex-shrink:0">
-        <circle cx="12" cy="12" r="12" fill="#07150b"/>
-        <path d="M5.4 9.2c4.5-1.4 9.6-.9 13.1 1.3"
-              fill="none" stroke="#1ed760" stroke-width="1.8"
-              stroke-linecap="round"/>
-        <path d="M6.2 12.2c3.7-1.1 8-.7 11.2 1.1"
-              fill="none" stroke="#1ed760" stroke-width="1.6"
-              stroke-linecap="round"/>
-        <path d="M7 15c3-.8 6.2-.4 8.9 1"
-              fill="none" stroke="#1ed760" stroke-width="1.5"
-              stroke-linecap="round"/>
-      </svg>
-      Conectar con Spotify
-    </a>
-    """,
-    unsafe_allow_html=True,
-)
-
+    st.markdown(
+        f"""
+        <a href="{html.escape(spotify_url, quote=True)}"
+           target="_self"
+           style="
+             display:flex;
+             align-items:center;
+             justify-content:center;
+             gap:12px;
+             width:100%;
+             min-height:48px;
+             box-sizing:border-box;
+             padding:12px 16px;
+             border-radius:14px;
+             background:#1ed760;
+             color:#07150b;
+             font-family:'Google Sans',sans-serif;
+             font-size:14px;
+             font-weight:700;
+             text-decoration:none;
+           ">
+          <svg width="24" height="24" viewBox="0 0 24 24"
+               aria-hidden="true" style="flex-shrink:0">
+            <circle cx="12" cy="12" r="12" fill="#07150b"/>
+            <path d="M5.4 9.2c4.5-1.4 9.6-.9 13.1 1.3"
+                  fill="none" stroke="#1ed760" stroke-width="1.8"
+                  stroke-linecap="round"/>
+            <path d="M6.2 12.2c3.7-1.1 8-.7 11.2 1.1"
+                  fill="none" stroke="#1ed760" stroke-width="1.6"
+                  stroke-linecap="round"/>
+            <path d="M7 15c3-.8 6.2-.4 8.9 1"
+                  fill="none" stroke="#1ed760" stroke-width="1.5"
+                  stroke-linecap="round"/>
+          </svg>
+          Conectar con Spotify
+        </a>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ---------- Procesamiento de canciones ----------
 def parse_tracks(raw, requested_count):
@@ -841,88 +839,88 @@ if st.session_state.step == "create":
         unsafe_allow_html=True,
     )
 
-    with st.container(key="prompt_shell"):
-    st.text_area(
-        "Tu petición",
-        key="prompt",
-        height=150,
-        placeholder=(
-            "Describe el sonido que buscas...\n\n"
-            "Ej.: Rock alternativo de los 2000, oscuro y enérgico, "
-            "con clásicos y grupos menos conocidos. Sin baladas."
-        ),
-        label_visibility="collapsed",
-    )
-
-    col_settings, col_generate = st.columns(
-        2,
-        gap="small",
-    )
-
-    with col_settings:
-        with st.popover(
-            "⚙  Ajustes",
-            use_container_width=True,
-        ):
-            st.markdown("### Ajustes de generación")
-            st.caption(
-                "Personaliza el tamaño y la diversidad de tu playlist."
-            )
-
-            st.slider(
-                "Cantidad de canciones",
-                min_value=5,
-                max_value=50,
-                key="count",
-            )
-
-            st.slider(
-                "Cantidad de artistas",
-                min_value=1,
-                max_value=15,
-                key="artist_count",
-            )
-
-            st.markdown("**Creatividad**")
-            st.caption(
-                "BAJA: prioriza resultados previsibles.\n\n"
-                "ALTA: permite mezclas más inesperadas."
-            )
-
-            st.slider(
-                "Creatividad",
-                min_value=0.0,
-                max_value=1.0,
-                step=0.1,
-                key="temperature",
-                label_visibility="collapsed",
-            )
-
-            st.markdown(
-                """
-                <div style="
-                    display:flex;
-                    justify-content:space-between;
-                    margin-top:-8px;
-                    color:rgba(255,255,255,.72);
-                    font-size:11px;
-                    font-weight:700;
-                    letter-spacing:1px;
-                ">
-                    <span>BAJA</span>
-                    <span>ALTA</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-    with col_generate:
-        generate = st.button(
-            "Generar  ↗",
-            key="generate",
-            type="primary",
-            use_container_width=True,
+        with st.container(key="prompt_shell"):
+        st.text_area(
+            "Tu petición",
+            key="prompt",
+            height=150,
+            placeholder=(
+                "Describe el sonido que buscas...\n\n"
+                "Ej.: Rock alternativo de los 2000, oscuro y enérgico, "
+                "con clásicos y grupos menos conocidos. Sin baladas."
+            ),
+            label_visibility="collapsed",
         )
+
+        col_settings, col_generate = st.columns(
+            2,
+            gap="small",
+        )
+
+        with col_settings:
+            with st.popover(
+                "⚙  Ajustes",
+                use_container_width=True,
+            ):
+                st.markdown("### Ajustes de generación")
+                st.caption(
+                    "Personaliza el tamaño y la diversidad de tu playlist."
+                )
+
+                st.slider(
+                    "Cantidad de canciones",
+                    min_value=5,
+                    max_value=50,
+                    key="count",
+                )
+
+                st.slider(
+                    "Cantidad de artistas",
+                    min_value=1,
+                    max_value=15,
+                    key="artist_count",
+                )
+
+                st.markdown("**Creatividad**")
+                st.caption(
+                    "BAJA: prioriza resultados previsibles.\n\n"
+                    "ALTA: permite mezclas más inesperadas."
+                )
+
+                st.slider(
+                    "Creatividad",
+                    min_value=0.0,
+                    max_value=1.0,
+                    step=0.1,
+                    key="temperature",
+                    label_visibility="collapsed",
+                )
+
+                st.markdown(
+                    """
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        margin-top:-8px;
+                        color:rgba(255,255,255,.72);
+                        font-size:11px;
+                        font-weight:700;
+                        letter-spacing:1px;
+                    ">
+                        <span>BAJA</span>
+                        <span>ALTA</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+        with col_generate:
+            generate = st.button(
+                "Generar  ↗",
+                key="generate",
+                type="primary",
+                use_container_width=True,
+            )
 
     if generate:
         if not st.session_state.prompt.strip():
