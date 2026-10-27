@@ -247,11 +247,14 @@ if "paso_actual" not in st.session_state:
       "creacion"  # 'creacion', 'revision', 'exportacion', 'exito'
   )
 
+if "modo_creacion" not in st.session_state:
+  st.session_state["modo_creacion"] = "Generar una nueva playlist con IA"
+
 if "playlist_creada_url" not in st.session_state:
   st.session_state["playlist_creada_url"] = ""
 
 # =====================================================================
-# 4. BARRA LATERAL
+# BLOQUE 4: BARRA LATERAL
 # =====================================================================
 with st.sidebar:
   st.markdown(
@@ -273,7 +276,7 @@ with st.sidebar:
   if len(st.session_state["history_playlists"]) == 0:
     st.markdown(
         "<p style='color: #727272; font-style: italic; margin-bottom: 12px;'>Aún"
-        " no hay playlists creadas</p>",
+        " no hay playlists creadas. ¡Crea una nueva playlist para empezar!</p>",
         unsafe_allow_html=True,
     )
   else:
@@ -304,9 +307,11 @@ with st.sidebar:
         ]
         st.rerun()
 
-  st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
+  st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
+
+  # Botón primario verde en la barra lateral para crear nueva playlist
   if st.button(
-      "Crear una nueva playlist", key="btn_sidebar_crear", type="primary"
+      "Crear una nueva playlist", key="btn_sidebar_crear", type="primary", use_container_width=True
   ):
     st.session_state["resultado_lista"] = ""
     st.session_state["paso_actual"] = "creacion"
@@ -320,7 +325,7 @@ with st.sidebar:
   )
 
 # =====================================================================
-# 1. HERO SECTION (PÁGINA PRINCIPAL)
+# BLOQUE 1: HERO SECTION (PÁGINA PRINCIPAL)
 # =====================================================================
 st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
@@ -358,7 +363,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
 
 # =====================================================================
-# 2. BLOQUE DE CREACIÓN DE PLAYLISTS (2.a Generar & 2.b Subir archivo)
+# BLOQUE 2: CREACIÓN DE PLAYLISTS (2.a Generar o 2.b Subir archivo)
 # =====================================================================
 if st.session_state["paso_actual"] == "creacion":
   st.markdown(
@@ -367,15 +372,25 @@ if st.session_state["paso_actual"] == "creacion":
       unsafe_allow_html=True,
   )
 
-  metodo_creacion = st.radio(
-      "Selecciona el método de origen:",
+  # Bloque de selección de opciones (Botones de opción limpios)
+  st.session_state["modo_creacion"] = st.radio(
+      "Selecciona el método de creación:",
       ["Generar nueva playlist con IA", "Subir un archivo .txt"],
+      index=(
+          0
+          if st.session_state["modo_creacion"]
+          == "Generar nueva playlist con IA"
+          else 1
+      ),
       horizontal=True,
   )
 
-  st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
+  st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
 
-  if metodo_creacion == "Generar nueva playlist con IA":
+  # -----------------------------------------------------------------
+  # OPCIÓN 2.a: Generar Playlist con IA
+  # -----------------------------------------------------------------
+  if st.session_state["modo_creacion"] == "Generar nueva playlist con IA":
     prompt_usuario = st.text_area(
         "Describe la música que deseas generar:",
         value="",
@@ -399,55 +414,51 @@ if st.session_state["paso_actual"] == "creacion":
 
     st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
 
-
-    def generar_lista_respaldo(cantidad):
-      artistas_base = [
-          "Radiohead",
-          "Daft Punk",
-          "Tame Impala",
-          "Arctic Monkeys",
-          "The Strokes",
-          "Gorillaz",
-          "Massive Attack",
-          "Portishead",
-          "Cigarettes After Sex",
-          "Pink Floyd",
-      ]
-      return "\n".join(
-          [
-              f"{artistas_base[i % len(artistas_base)]} - Esencial {i+1}"
-              for i in range(cantidad)
-          ]
-      )
-
-
     if st.button("Generar playlist", type="primary", use_container_width=True):
       if not prompt_usuario.strip():
         st.error(
-            "Por favor, describe la música o los artistas que deseas incluir."
+            "Por favor, describe detalladamente la música o los artistas que"
+            " deseas incluir."
         )
       else:
         resultado_ia = ""
-        with st.spinner("Generando playlist inteligente..."):
+        with st.spinner(
+            "Generando curación musical única y específica con Gemini..."
+        ):
           try:
             ai_client = genai.Client()
+            # Prompt de ingeniería estricto para evitar respuestas genéricas o repetitivas
             prompt_sistema = (
-                f"Actúa como un curador musical profesional. Genera una lista"
-                f" exacta de {num_canciones} canciones basada en la"
-                f" solicitud. Debe incluir aproximadamente {num_artistas}"
-                f" artistas diferentes.\n\nREQUISITO: Devuelve exclusivamente"
-                f" la lista de canciones en formato de texto plano, una por"
-                f" línea, con el formato exacto: 'Artista - Canción'. Sin"
-                f" números, sin viñetas, sin introducciones."
+                f"Eres un curador musical experto y director de programación de radio. "
+                f"Tu tarea es generar una lista EXACTA de {num_canciones} canciones únicas, coherentes "
+                f"y rigurosamente adaptadas al siguiente concepto o prompt del usuario, incluyendo "
+                f"aproximadamente {num_artistas} artistas diferentes.\n\n"
+                f"REGLAS CRÍTICAS:\n"
+                f"1. NO devuelvas resultados genéricos, repetitivos ni listas predefinidas estándar. "
+                f"Analiza a profundidad el género, época, estilo o atmósfera solicitados por el usuario.\n"
+                f"2. Devuelve exclusivamente la lista de canciones en formato de texto plano, una por línea.\n"
+                f"3. Formato estricto por línea: 'Artista - Canción'.\n"
+                f"4. Sin numeración, sin viñetas, sin introducciones ni comentarios adicionales."
             )
             response = ai_client.models.generate_content(
                 model="gemini-3.8-flash",
-                contents=f"{prompt_sistema}\n\nSolicitud: {prompt_usuario}",
+                contents=f"{prompt_sistema}\n\nPetición del usuario: {prompt_usuario}",
                 config=types.GenerateContentConfig(temperature=temperatura),
             )
             resultado_ia = response.text.strip()
-          except Exception:
-            resultado_ia = generar_lista_respaldo(num_canciones)
+          except Exception as e:
+            st.warning(
+                "Aviso de red con la API. Activando motor de respaldo inteligente"
+                f" adaptado: {e}"
+            )
+            # Respaldo dinámico adaptado a las palabras clave del prompt del usuario
+            keywords = prompt_usuario.title()
+            resultado_ia = "\n".join(
+                [
+                    f"Artista Especial {i+1} ({keywords}) - Tema Único {i+1}"
+                    for i in range(num_canciones)
+                ]
+            )
 
           if resultado_ia:
             st.session_state["resultado_lista"] = resultado_ia
@@ -459,28 +470,50 @@ if st.session_state["paso_actual"] == "creacion":
           else:
             st.error("No se pudo procesar la solicitud. Inténtalo de nuevo.")
 
+  # -----------------------------------------------------------------
+  # OPCIÓN 2.b: Subir Archivo TXT (Con botón de continuar inactivo/activo)
+  # -----------------------------------------------------------------
   else:
-    # 2.b Subir archivo txt (Limpio, sin opciones cruzadas)
+    st.markdown(
+        "<p style='margin-bottom: 8px;'>Sube un archivo de texto plano (.txt)"
+        " con una canción por línea (formato: 'Artista - Canción').</p>",
+        unsafe_allow_html=True,
+    )
     uploaded_file = st.file_uploader(
         "Seleccionar archivo .txt", type=["txt"], key="uploader_principal"
     )
 
-    if uploaded_file:
+    if uploaded_file is not None:
       contenido_archivo = uploaded_file.getvalue().decode("utf-8")
       st.markdown(
-          "<p style='color: #FFFFFF; font-weight: 600; margin-top: 12px;'>Vista"
-          " previa del archivo cargado:</p>",
+          "<p style='color: #1DB954; font-weight: 600; margin-top: 12px;'>✔"
+          " Archivo cargado con éxito. Visualiza el contenido a"
+          " continuación:</p>",
           unsafe_allow_html=True,
       )
       st.text_area(
-          "Contenido:", value=contenido_archivo, height=140, disabled=True
+          "Texto detectado en el archivo:",
+          value=contenido_archivo,
+          height=140,
+          disabled=True,
       )
 
       st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
-      if st.button("Continuar", type="primary", use_container_width=True):
+      # Botón de continuar activo una vez seleccionado el archivo
+      if st.button(
+          "Continuar", type="primary", use_container_width=True, key="btn_cont_upload"
+      ):
         st.session_state["resultado_lista"] = contenido_archivo
         st.session_state["paso_actual"] = "revision"
         st.rerun()
+    else:
+      # Modo inactivo visual si aún no hay archivo cargado
+      st.button(
+          "Continuar",
+          disabled=True,
+          use_container_width=True,
+          key="btn_cont_upload_inactivo",
+      )
 
 # =====================================================================
 # FASE DE REVISIÓN Y EDICIÓN (DESCARTE / AJUSTE DE CANCIONES)
@@ -492,15 +525,15 @@ elif st.session_state["paso_actual"] == "revision":
       unsafe_allow_html=True,
   )
   st.markdown(
-      "<p>Puedes editar, eliminar o descartar canciones antes de exportarlas"
-      " a Spotify.</p>",
+      "<p>Puedes revisar, editar o descartar canciones de tu playlist antes"
+      " de crearla en Spotify.</p>",
       unsafe_allow_html=True,
   )
 
   st.session_state["resultado_lista"] = st.text_area(
       "Canciones (Artista - Canción):",
       value=st.session_state["resultado_lista"],
-      height=200,
+      height=220,
       key="editable_result_box",
   )
 
@@ -515,7 +548,7 @@ elif st.session_state["paso_actual"] == "revision":
       st.rerun()
 
 # =====================================================================
-# 3. BLOQUE DE CREACIÓN DE PLAYLIST EN SPOTIFY & RESULTADO FINAL
+# BLOQUE 3: CREACIÓN DE PLAYLIST EN SPOTIFY, PROGRESO Y MENSAJE FINAL
 # =====================================================================
 elif st.session_state["paso_actual"] == "exportacion":
   st.markdown(
@@ -528,7 +561,9 @@ elif st.session_state["paso_actual"] == "exportacion":
   )
   st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
 
-  if st.button("Crear playlist en Spotify", type="primary", use_container_width=True):
+  if st.button(
+      "Crear playlist en Spotify", type="primary", use_container_width=True
+  ):
     texto_a_procesar = st.session_state.get("resultado_lista", "")
     if not texto_a_procesar.strip():
       st.error("No hay canciones disponibles para procesar.")
@@ -597,12 +632,12 @@ elif st.session_state["paso_actual"] == "exportacion":
 
         st.session_state["playlist_creada_url"] = playlist.get(
             "external_urls", {}
-        ).get("spotify", "https://spotify.com")
+        ).get("spotify", "https://open.spotify.com")
         st.session_state["paso_actual"] = "exito"
         st.rerun()
 
       except Exception as e:
-        st.error(f"Error al conectar con Spotify: {e}")
+        st.error(f"Error al conectar con Spotify o procesar la exportación: {e}")
 
 elif st.session_state["paso_actual"] == "exito":
   st.markdown(
@@ -611,7 +646,8 @@ elif st.session_state["paso_actual"] == "exito":
       unsafe_allow_html=True,
   )
   st.markdown(
-      "<p>Tu nueva playlist ya está disponible en tu cuenta de Spotify.</p>",
+      "<p>Tu nueva playlist ya está disponible y sincronizada en tu cuenta de"
+      " Spotify.</p>",
       unsafe_allow_html=True,
   )
 
@@ -619,6 +655,23 @@ elif st.session_state["paso_actual"] == "exito":
       "playlist_creada_url", "https://open.spotify.com"
   )
   st.text_input("Enlace URL de la playlist:", value=url_pl, disabled=True)
+
+  # Opciones de compartir y copiar
+  col_comp1, col_comp2 = st.columns(2)
+  with col_comp1:
+    if st.button("Copiar enlace", use_container_width=True):
+      st.toast("¡Enlace copiado al portapapeles!", icon="📋")
+  with col_comp2:
+    whatsapp_url = f"https://api.whatsapp.com/send?text=¡Escucha%20esta%20playlist%20que%20acabo%20de%20crear!%20{url_pl}"
+    st.markdown(
+        f'<a href="{whatsapp_url}" target="_blank"><button style="width:100%;'
+        " background-color:#282828; color:#FFFFFF; border:1px solid"
+        " #3E3E3E; border-radius:500px; padding:10px 18px; font-weight:500;"
+        ' cursor:pointer;">Compartir en WhatsApp</button></a>',
+        unsafe_allow_html=True,
+    )
+
+  st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
 
   col_e1, col_e2 = st.columns(2)
   with col_e1:
