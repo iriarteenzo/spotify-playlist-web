@@ -18,7 +18,7 @@ REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.ap
 # CONFIGURACIÓN DE PÁGINA (Favicon ajustado al badge AI)
 # =====================================================================
 st.set_page_config(
-    page_title="plAIlister", page_icon="🟢", layout="centered"
+    page_title="pl(ai)lister", page_icon="🟢", layout="centered"
 )
 
 # =====================================================================
@@ -58,13 +58,13 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        gap: 6px;
-        font-size: 32px;
+        gap: 4px;
+        font-size: 40px;
         font-weight: 800;
         letter-spacing: -0.5px;
         color: #FFFFFF;
         margin-bottom: 24px;
-        padding-top: 10px;
+        padding-top: 8px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .ai-wave-badge {
@@ -75,7 +75,7 @@ st.markdown(
         border-radius: 50%;
         width: 34px;
         height: 34px;
-        font-size: 15px;
+        font-size: 20px;
         color: #1DB954;
         font-weight: 800;
         background-color: rgba(29, 185, 84, 0.1);
@@ -99,14 +99,14 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        gap: 6px;
+        gap: 4px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .hero-subtitle {
         font-size: 18px;
         color: #1DB954;
         font-weight: 600;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
 
@@ -302,7 +302,7 @@ with st.sidebar:
 
   st.markdown("---")
   st.markdown(
-      "<p style='font-size: 12px; color: #727272;'>Conectado a Spotify API"
+      "<p style='font-size: 10px; color: #727272;'>Conectado a Spotify API"
       " & Google GenAI</p>",
       unsafe_allow_html=True,
   )
@@ -314,43 +314,34 @@ st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
     """
     <div class="hero-title">
-        pl<div class="ai-wave-badge" style="width: 36px; height: 36px; font-size: 16px;">ai</div>lister Studio
+        pl<div class="ai-wave-badge" style="width: 36px; height: 36px; font-size: 16px;">ai</div>lister
     </div>
 """,
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<div class="hero-subtitle">Inteligencia artificial aplicada a la curación'
-    " musical con Spotify</div>",
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    "<div style='font-size: 15px; color: #FFFFFF; font-weight: 700; margin-top:"
-    " 16px; margin-bottom: 12px;'>Usa plAIlister para:</div>",
+    '<div class="hero-subtitle">Genera playlists con IA y escuchalas en Spotify'
+    </div>",
     unsafe_allow_html=True,
 )
 
 st.markdown(
     """
     <div class="feature-card">
-        <div class="feature-title">Generar nuevas playlists con IA</div>
-        <div class="feature-desc">Crea colecciones musicales personalizadas al instante describiendo cualquier concepto, género o atmósfera.</div>
+        <div class="feature-title">Genera nuevas playlists con IA</div>
+        <div class="feature-desc">Crea colecciones musicales personalizadas al instante describiendo lo que quieres escuchar.</div>
     </div>
     <div class="feature-card">
-        <div class="feature-title">Descubrir nuevos artistas</div>
-        <div class="feature-desc">Explora recomendaciones expertas basadas en algoritmos de inteligencia artificial que cruzan estilos musicales afines.</div>
+        <div class="feature-title">Descubre nuevos artistas</div>
+        <div class="feature-desc">Amplia tus gustos musicales con recomendaciones que no te imaginabas.</div>
     </div>
     <div class="feature-card">
-        <div class="feature-title">Ampliar tus gustos musicales</div>
-        <div class="feature-desc">Evoluciona tu biblioteca con selecciones inteligentes conectadas directamente a tu cuenta de Spotify.</div>
+        <div class="feature-title">Conecta tu nueva música a Spotify</div>
+        <div class="feature-desc">Tu biblioteca de Spotify, ahora con más música.</div>
     </div>
 """,
     unsafe_allow_html=True,
 )
-
-st.markdown("</div>", unsafe_allow_html=True)
-st.markdown("---")
 
 # =====================================================================
 # BLOQUE DEL GENERADOR DE PLAYLISTS CON IA
@@ -365,7 +356,7 @@ st.markdown(
 prompt_usuario = st.text_area(
     "Describe la música que deseas generar:",
     value="",
-    height=100,
+    height=200,
     key="main_prompt_box",
 )
 
@@ -373,10 +364,10 @@ prompt_usuario = st.text_area(
 col_p1, col_p2, col_p3 = st.columns(3)
 with col_p1:
   num_canciones = st.slider(
-      "Cantidad de canciones", min_value=5, max_value=40, value=15
+      "Cantidad de canciones", min_value=5, max_value=200, value=15
   )
 with col_p2:
-  num_artistas = st.slider("Artistas distintos", min_value=1, max_value=12, value=5)
+  num_artistas = st.slider("Artistas distintos", min_value=1, max_value=20, value=5)
 with col_p3:
   temperatura = st.slider(
       "Creatividad", min_value=0.0, max_value=1.0, value=0.7
@@ -391,7 +382,7 @@ if st.button("Generar playlist", type="primary", use_container_width=True):
         "Por favor, describe la música o los artistas que deseas incluir."
     )
   else:
-    with st.spinner("Gemini está curando tu selección musical..."):
+    with st.spinner("Generando playlist con Gemini..."):
       try:
         ai_client = genai.Client()
         prompt_sistema = (
@@ -429,7 +420,7 @@ if st.session_state["resultado_lista"]:
   st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
   st.markdown(
       "<h3>Vista previa de la playlist generada (Puedes editarla antes de"
-      " enviarla):</h3>",
+      " crear tu playlist en Spotify):</h3>",
       unsafe_allow_html=True,
   )
   st.session_state["resultado_lista"] = st.text_area(
@@ -466,13 +457,13 @@ st.markdown(
 tipo_origen = st.radio(
     "Origen de las canciones:",
     [
-        "Usar la lista generada por IA de arriba",
-        "Subir un archivo .txt externo",
+        "Usar la lista generada",
+        "Subir un archivo",
     ],
 )
 
 uploaded_file = None
-if tipo_origen == "Subir un archivo .txt externo":
+if tipo_origen == "Subir un archivo":
   uploaded_file = st.file_uploader(
       "Sube tu archivo de canciones (.txt)", type=["txt"]
   )
@@ -482,7 +473,7 @@ nombre_playlist = st.text_input(
 )
 
 texto_a_procesar = ""
-if tipo_origen == "Usar la lista generada por IA de arriba":
+if tipo_origen == "Usar la lista generada":
   texto_a_procesar = st.session_state.get("resultado_lista", "")
 else:
   if uploaded_file:
