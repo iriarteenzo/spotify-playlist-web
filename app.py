@@ -22,7 +22,7 @@ st.set_page_config(
 )
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - TIPOGRAFÍA Y CENTRADO)
+# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - CORRECCIONES APLICADAS)
 # =====================================================================
 st.markdown(
     """
@@ -37,7 +37,7 @@ st.markdown(
         font-family: 'Google Sans', Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
-    /* Barra lateral en negro absoluto */
+    /* Barra lateral en negro absoluto y ocultar texto residual superior */
     section[data-testid="stSidebar"] {
         background-color: #000000;
         border-right: 1px solid #282828;
@@ -51,6 +51,11 @@ st.markdown(
     }
     section[data-testid="stSidebar"] h3 {
         color: #FFFFFF !important;
+    }
+    /* Ocultar texto "keyboard_double_..." o iconos residuales superiores en la barra lateral */
+    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] span,
+    section[data-testid="stSidebar"] header {
+        display: none !important;
     }
 
     /* Logo con ondas AI (Minúscula y centrado vertical perfecto en línea) */
@@ -197,7 +202,7 @@ st.markdown(
         background-color: #1DB954 !important;
     }
 
-    /* File Uploader estilizado y texto de botón upload en #3e3e3e */
+    /* Corrección del File Uploader (Evitar texto duplicado y aplicar diseño limpio) */
     div[data-testid="stFileUploader"] {
         background-color: #181818;
         border: 1px dashed #3E3E3E;
@@ -213,7 +218,10 @@ st.markdown(
         font-weight: 700 !important;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
-    div[data-testid="stFileUploader"] span, 
+    /* Ocultar etiquetas duplicadas internas de Streamlit en el uploader */
+    div[data-testid="stFileUploader"] section div div span {
+        display: none !important;
+    }
     div[data-testid="stFileUploader"] small {
         color: #555555 !important;
         font-family: 'Google Sans', Helvetica, sans-serif;
@@ -254,7 +262,7 @@ if "resultado_lista" not in st.session_state:
   st.session_state["resultado_lista"] = ""
 
 # =====================================================================
-# BARRA LATERAL (SIDEBAR CON BADGE AI EN MINÚSCULA)
+# BARRA LATERAL (SIDEBAR)
 # =====================================================================
 with st.sidebar:
   st.markdown(
@@ -308,7 +316,7 @@ with st.sidebar:
   )
 
 # =====================================================================
-# PANTALLA PRINCIPAL (HERO TITLE CON BADGE AI EN MINÚSCULA)
+# PANTALLA PRINCIPAL
 # =====================================================================
 st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
@@ -347,7 +355,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Campo de texto principal
 prompt_usuario = st.text_area(
     "Describe la música que deseas generar:",
     value="",
@@ -355,7 +362,6 @@ prompt_usuario = st.text_area(
     key="main_prompt_box",
 )
 
-# Parámetros avanzados
 col_p1, col_p2, col_p3 = st.columns(3)
 with col_p1:
   num_canciones = st.slider(
@@ -370,7 +376,6 @@ with col_p3:
 
 st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
 
-# Botón de Generación Directa actualizado al modelo gemini-3.8-flash
 if st.button("Generar playlist", type="primary", use_container_width=True):
   if not prompt_usuario.strip():
     st.error(
@@ -410,7 +415,6 @@ if st.button("Generar playlist", type="primary", use_container_width=True):
       except Exception as e:
         st.error(f"Error al conectar con la inteligencia artificial: {e}")
 
-# Visualización y edición de la playlist generada por IA
 if st.session_state["resultado_lista"]:
   st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
   st.markdown(
@@ -459,9 +463,16 @@ tipo_origen = st.radio(
 
 uploaded_file = None
 if tipo_origen == "Subir un archivo":
-  uploaded_file = st.file_uploader(
-      "Sube tu archivo de canciones (.txt)", type=["txt"]
+  label_uploader = (
+      "⬆️ Subir archivo"
+      if st.session_state.get("archivo_cargado_previo")
+      else "📁 Seleccionar archivo"
   )
+  uploaded_file = st.file_uploader(
+      label_uploader, type=["txt"], key="custom_uploader"
+  )
+  if uploaded_file:
+    st.session_state["archivo_cargado_previo"] = True
 
 nombre_playlist = st.text_input(
     "Nombre de la playlist en Spotify", value="Mi nueva playlist"
