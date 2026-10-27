@@ -275,7 +275,6 @@ with st.sidebar:
           "show_all_history"
       ]
       st.rerun()
-  )
 
 # =====================================================================
 # PANTALLA PRINCIPAL
