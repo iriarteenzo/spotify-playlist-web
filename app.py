@@ -190,7 +190,7 @@ st.markdown(
         background-color: #1DB954 !important;
     }
 
-    /* Corrección limpia del File Uploader para mostrar texto legible */
+    /* Corrección limpia del File Uploader para garantizar visibilidad del texto */
     div[data-testid="stFileUploader"] {
         background-color: #181818;
         border: 1px dashed #3E3E3E;
@@ -243,6 +243,9 @@ if "show_all_history" not in st.session_state:
 if "resultado_lista" not in st.session_state:
   st.session_state["resultado_lista"] = ""
 
+if "vista_activa" not in st.session_state:
+  st.session_state["vista_activa"] = "Generar una nueva playlist"
+
 # =====================================================================
 # BARRA LATERAL (SIDEBAR)
 # =====================================================================
@@ -270,10 +273,11 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
     if st.button("Generar una nueva playlist", key="btn_sidebar_gen"):
-      st.toast(
-          "Redirigiendo a la sección del generador de listas inteligente...",
-          icon="🎵",
-      )
+      st.session_state["vista_activa"] = "Generar una nueva playlist"
+      st.rerun()
+    if st.button("Subir una playlist", key="btn_sidebar_sub"):
+      st.session_state["vista_activa"] = "Subir una playlist"
+      st.rerun()
   else:
     limit_display = (
         len(st.session_state["history_playlists"])
@@ -302,8 +306,12 @@ with st.sidebar:
         ]
         st.rerun()
 
-  if st.button("Subir una playlist", key="btn_sidebar_sub"):
-    st.toast("Redirigiendo a la sección de exportación a Spotify...", icon="📂")
+    if st.button("Generar una nueva playlist", key="btn_sidebar_gen_alt"):
+      st.session_state["vista_activa"] = "Generar una nueva playlist"
+      st.rerun()
+    if st.button("Subir una playlist", key="btn_sidebar_sub_alt"):
+      st.session_state["vista_activa"] = "Subir una playlist"
+      st.rerun()
 
   st.markdown("---")
   st.markdown(
@@ -343,251 +351,266 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# =====================================================================
-# BLOQUE DEL GENERADOR DE PLAYLISTS CON IA (BLINDADO CON RESPALDO OFFLINE)
-# =====================================================================
-st.markdown(
-    "<h2 id='seccion-generador' style='font-size: 22px; margin-bottom:"
-    " 8px;'>Generador de listas inteligente</h2>",
-    unsafe_allow_html=True,
+# Selector de navegación sincronizado con la barra lateral
+st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
+st.session_state["vista_activa"] = st.radio(
+    "Selecciona la acción principal:",
+    ["Generar una nueva playlist", "Subir una playlist"],
+    index=(
+        0
+        if st.session_state["vista_activa"] == "Generar una nueva playlist"
+        else 1
+    ),
+    horizontal=True,
 )
 
-prompt_usuario = st.text_area(
-    "Describe la música que deseas generar:",
-    value="",
-    height=200,
-    key="main_prompt_box",
-)
+st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
 
-col_p1, col_p2, col_p3 = st.columns(3)
-with col_p1:
-  num_canciones = st.slider(
-      "Cantidad de canciones", min_value=5, max_value=200, value=15
-  )
-with col_p2:
-  num_artistas = st.slider("Artistas distintos", min_value=1, max_value=20, value=5)
-with col_p3:
-  temperatura = st.slider(
-      "Creatividad", min_value=0.0, max_value=1.0, value=0.7
-  )
-
-st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
-
-
-def generar_lista_respaldo(prompt, cantidad, artistas):
-  """Función de respaldo offline para garantizar 100% de operatividad ante saturación de API."""
-  artistas_base = [
-      "Radiohead",
-      "Daft Punk",
-      "Tame Impala",
-      "Arctic Monkeys",
-      "The Strokes",
-      "Gorillaz",
-      "Massive Attack",
-      "Portishead",
-      "Cigarettes After Sex",
-      "Pink Floyd",
-      "Fleetwood Mac",
-      "David Bowie",
-      "The Weeknd",
-      "Rosalía",
-      "Bad Bad Not Good",
-      "Khruangbin",
-      "Bonobo",
-      "Four Tet",
-      "Boards of Canada",
-      "Aphex Twin",
-  ]
-  resultado = []
-  for i in range(1, cantidad + 1):
-    artista = artistas_base[(i - 1) % len(artistas_base)]
-    resultado.append(f"{artista} - Tema Esencial {i}")
-  return "\n".join(resultado)
-
-
-if st.button("Generar playlist", type="primary", use_container_width=True):
-  if not prompt_usuario.strip():
-    st.error(
-        "Por favor, describe la música o los artistas que deseas incluir."
-    )
-  else:
-    resultado_ia = ""
-    with st.spinner("Generando playlist inteligente..."):
-      # Sistema de reintentos y respaldo infalible
-      intentos = 2
-      for intento in range(intentos):
-        try:
-          ai_client = genai.Client()
-          prompt_sistema = (
-              f"Actúa como un curador musical profesional. Genera una lista"
-              f" exacta de {num_canciones} canciones basada en la solicitud."
-              f" Debe incluir aproximadamente {num_artistas} artistas"
-              f" diferentes.\n\nREQUISITO: Devuelve exclusivamente la lista de"
-              f" canciones en formato de texto plano, una por línea, con el"
-              f" formato exacto: 'Artista - Canción'. Sin números, sin"
-              f" viñetas, sin introducciones."
-          )
-
-          response = ai_client.models.generate_content(
-              model="gemini-3.8-flash",
-              contents=f"{prompt_sistema}\n\nSolicitud: {prompt_usuario}",
-              config=types.GenerateContentConfig(temperature=temperatura),
-          )
-          resultado_ia = response.text.strip()
-          if resultado_ia:
-            break
-        except Exception:
-          if intento == intentos - 1:
-            # Si falla la API por tráfico o cuota, activamos el respaldo inteligente automático
-            resultado_ia = generar_lista_respaldo(
-                prompt_usuario, num_canciones, num_artistas
-            )
-          else:
-            time.sleep(1)
-
-      if resultado_ia:
-        st.success("¡Lista generada con éxito!")
-        st.session_state["resultado_lista"] = resultado_ia
-
-        nuevo_nombre = prompt_usuario[:25] + "..."
-        if nuevo_nombre not in st.session_state["history_playlists"]:
-          st.session_state["history_playlists"].append(nuevo_nombre)
-      else:
-        st.error("No se pudo procesar la solicitud. Inténtalo de nuevo.")
-
-if st.session_state["resultado_lista"]:
-  st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
+# =====================================================================
+# VISTA 1: GENERADOR DE PLAYLISTS CON IA
+# =====================================================================
+if st.session_state["vista_activa"] == "Generar una nueva playlist":
   st.markdown(
-      "<h3>Vista previa de la playlist generada (Puedes editarla antes de"
-      " crear tu playlist en Spotify):</h3>",
+      "<h2 style='font-size: 22px; margin-bottom: 8px;'>Generador de listas"
+      " inteligente</h2>",
       unsafe_allow_html=True,
   )
-  st.session_state["resultado_lista"] = st.text_area(
-      "Canciones (Artista - Canción):",
-      value=st.session_state["resultado_lista"],
-      height=180,
-      key="editable_result_box",
+
+  prompt_usuario = st.text_area(
+      "Describe la música que deseas generar:",
+      value="",
+      height=200,
+      key="main_prompt_box",
   )
 
-  st.download_button(
-      label="Descargar lista como archivo .txt",
-      data=st.session_state["resultado_lista"],
-      file_name="playlist_ia.txt",
-      mime="text/plain",
-      use_container_width=True,
-  )
-
-st.markdown("<div style='margin: 36px 0;'></div>", unsafe_allow_html=True)
-
-# =====================================================================
-# OPCIÓN ALTERNATIVA: SUBIR TXT Y ENVIAR A Spotify
-# =====================================================================
-st.markdown(
-    "<h2 id='seccion-exportar' style='font-size: 22px; margin-bottom:"
-    " 6px;'>Exportar a Spotify</h2>",
-    unsafe_allow_html=True,
-)
-st.markdown(
-    "<p style='margin-bottom: 16px;'>Puedes usar el resultado generado arriba"
-    " o subir un archivo de texto externo (.txt) para pasarlo a tu"
-    " cuenta.</p>",
-    unsafe_allow_html=True,
-)
-
-tipo_origen = st.radio(
-    "Origen de las canciones:",
-    [
-        "Usar la lista generada",
-        "Subir un archivo",
-    ],
-)
-
-uploaded_file = None
-if tipo_origen == "Subir un archivo":
-  uploaded_file = st.file_uploader(
-      "Seleccionar archivo .txt de canciones", type=["txt"], key="uploader_principal"
-  )
-
-nombre_playlist = st.text_input(
-    "Nombre de la playlist en Spotify", value="Mi nueva playlist"
-)
-
-texto_a_procesar = ""
-if tipo_origen == "Usar la lista generada":
-  texto_a_procesar = st.session_state.get("resultado_lista", "")
-else:
-  if uploaded_file:
-    texto_a_procesar = uploaded_file.getvalue().decode("utf-8")
-
-st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
-
-if st.button("Crear playlist en Spotify", type="primary", use_container_width=True):
-  if not texto_a_procesar.strip():
-    st.error(
-        "No hay canciones disponibles para procesar. Genera una lista con IA o"
-        " sube un archivo."
+  col_p1, col_p2, col_p3 = st.columns(3)
+  with col_p1:
+    num_canciones = st.slider(
+        "Cantidad de canciones", min_value=5, max_value=200, value=15
     )
-  elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID_REAL":
-    st.error("Configura tus credenciales reales de Spotify en el código.")
-  else:
-    lines = [
-        line.strip() for line in texto_a_procesar.splitlines() if line.strip()
+  with col_p2:
+    num_artistas = st.slider(
+        "Artistas distintos", min_value=1, max_value=20, value=5
+    )
+  with col_p3:
+    temperatura = st.slider(
+        "Creatividad", min_value=0.0, max_value=1.0, value=0.7
+    )
+
+  st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
+
+
+  def generar_lista_respaldo(prompt, cantidad, artistas):
+    artistas_base = [
+        "Radiohead",
+        "Daft Punk",
+        "Tame Impala",
+        "Arctic Monkeys",
+        "The Strokes",
+        "Gorillaz",
+        "Massive Attack",
+        "Portishead",
+        "Cigarettes After Sex",
+        "Pink Floyd",
+        "Fleetwood Mac",
+        "David Bowie",
+        "The Weeknd",
+        "Rosalía",
+        "Bad Bad Not Good",
+        "Khruangbin",
+        "Bonobo",
+        "Four Tet",
+        "Boards of Canada",
+        "Aphex Twin",
     ]
-    with st.spinner(f"Conectando con Spotify y procesando {len(lines)} temas..."):
-      try:
-        auth_manager = SpotifyOAuth(
-            client_id=CLIENT_ID,
-            client_secret=CLIENT_SECRET,
-            redirect_uri=REDIRECT_URI,
-            scope="playlist-modify-public playlist-modify-private",
-            cache_path=None,
-            show_dialog=True,
-        )
-        sp = spotipy.Spotify(auth_manager=auth_manager)
+    resultado = []
+    for i in range(1, cantidad + 1):
+      artista = artistas_base[(i - 1) % len(artistas_base)]
+      resultado.append(f"{artista} - Tema Esencial {i}")
+    return "\n".join(resultado)
 
-        user_id = sp.me()["id"]
-        playlist = sp.user_playlist_create(
-            user=user_id,
-            name=nombre_playlist,
-            public=True,
-            description="Creada automáticamente con plAIlister",
-        )
-        playlist_id = playlist["id"]
 
-        track_uris = []
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+  if st.button("Generar playlist", type="primary", use_container_width=True):
+    if not prompt_usuario.strip():
+      st.error(
+          "Por favor, describe la música o los artistas que deseas incluir."
+      )
+    else:
+      resultado_ia = ""
+      with st.spinner("Generando playlist inteligente..."):
+        intentos = 2
+        for intento in range(intentos):
+          try:
+            ai_client = genai.Client()
+            prompt_sistema = (
+                f"Actúa como un curador musical profesional. Genera una lista"
+                f" exacta de {num_canciones} canciones basada en la"
+                f" solicitud. Debe incluir aproximadamente {num_artistas}"
+                f" artistas diferentes.\n\nREQUISITO: Devuelve exclusivamente"
+                f" la lista de canciones en formato de texto plano, una por"
+                f" línea, con el formato exacto: 'Artista - Canción'. Sin"
+                f" números, sin viñetas, sin introducciones."
+            )
 
-        for i, line in enumerate(lines):
-          raw_query = line.strip()
-          result = sp.search(q=raw_query, type="track", limit=1)
-          tracks = result["tracks"]["items"]
+            response = ai_client.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=f"{prompt_sistema}\n\nSolicitud: {prompt_usuario}",
+                config=types.GenerateContentConfig(temperature=temperatura),
+            )
+            resultado_ia = response.text.strip()
+            if resultado_ia:
+              break
+          except Exception:
+            if intento == intentos - 1:
+              resultado_ia = generar_lista_respaldo(
+                  prompt_usuario, num_canciones, num_artistas
+              )
+            else:
+              time.sleep(1)
 
-          if not tracks and "-" in raw_query:
-            clean_query = re.sub(r"[\(\[\{].*?[\)\]\}]", "", raw_query).strip()
-            result = sp.search(q=clean_query, type="track", limit=1)
+        if resultado_ia:
+          st.success("¡Lista generada con éxito!")
+          st.session_state["resultado_lista"] = resultado_ia
+
+          nuevo_nombre = prompt_usuario[:25] + "..."
+          if nuevo_nombre not in st.session_state["history_playlists"]:
+            st.session_state["history_playlists"].append(nuevo_nombre)
+        else:
+          st.error("No se pudo procesar la solicitud. Inténtalo de nuevo.")
+
+  if st.session_state["resultado_lista"]:
+    st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
+    st.markdown(
+        "<h3>Vista previa de la playlist generada (Puedes editarla antes de"
+        " crear tu playlist en Spotify):</h3>",
+        unsafe_allow_html=True,
+    )
+    st.session_state["resultado_lista"] = st.text_area(
+        "Canciones (Artista - Canción):",
+        value=st.session_state["resultado_lista"],
+        height=180,
+        key="editable_result_box",
+    )
+
+    st.download_button(
+        label="Descargar lista como archivo .txt",
+        data=st.session_state["resultado_lista"],
+        file_name="playlist_ia.txt",
+        mime="text/plain",
+        use_container_width=True,
+    )
+
+# =====================================================================
+# VISTA 2: SUBIR ARCHIVO Y EXPORTAR A SPOTIFY
+# =====================================================================
+else:
+  st.markdown(
+      "<h2 style='font-size: 22px; margin-bottom: 6px;'>Exportar a Spotify</h2>",
+      unsafe_allow_html=True,
+  )
+  st.markdown(
+      "<p style='margin-bottom: 16px;'>Puedes usar el resultado generado"
+      " anteriormente o subir un archivo de texto externo (.txt) para pasarlo"
+      " a tu cuenta.</p>",
+      unsafe_allow_html=True,
+  )
+
+  tipo_origen = st.radio(
+      "Origen de las canciones:",
+      [
+          "Usar la lista generada",
+          "Subir un archivo",
+      ],
+  )
+
+  uploaded_file = None
+  if tipo_origen == "Subir un archivo":
+    uploaded_file = st.file_uploader(
+        "Seleccionar archivo .txt de canciones", type=["txt"], key="uploader_principal"
+    )
+
+  nombre_playlist = st.text_input(
+      "Nombre de la playlist en Spotify", value="Mi nueva playlist"
+  )
+
+  texto_a_procesar = ""
+  if tipo_origen == "Usar la lista generada":
+    texto_a_procesar = st.session_state.get("resultado_lista", "")
+  else:
+    if uploaded_file:
+      texto_a_procesar = uploaded_file.getvalue().decode("utf-8")
+
+  st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
+
+  if st.button("Crear playlist en Spotify", type="secondary", use_container_width=True):
+    if not texto_a_procesar.strip():
+      st.error(
+          "No hay canciones disponibles para procesar. Genera una lista con IA o"
+          " sube un archivo."
+      )
+    elif not CLIENT_ID or CLIENT_ID == "TU_CLIENT_ID_REAL":
+      st.error("Configura tus credenciales reales de Spotify en el código.")
+    else:
+      lines = [
+          line.strip() for line in texto_a_procesar.splitlines() if line.strip()
+      ]
+      with st.spinner(
+          f"Conectando con Spotify y procesando {len(lines)} temas..."
+      ):
+        try:
+          auth_manager = SpotifyOAuth(
+              client_id=CLIENT_ID,
+              client_secret=CLIENT_SECRET,
+              redirect_uri=REDIRECT_URI,
+              scope="playlist-modify-public playlist-modify-private",
+              cache_path=None,
+              show_dialog=True,
+          )
+          sp = spotipy.Spotify(auth_manager=auth_manager)
+
+          user_id = sp.me()["id"]
+          playlist = sp.user_playlist_create(
+              user=user_id,
+              name=nombre_playlist,
+              public=True,
+              description="Creada automáticamente con plAIlister",
+          )
+          playlist_id = playlist["id"]
+
+          track_uris = []
+          progress_bar = st.progress(0)
+          status_text = st.empty()
+
+          for i, line in enumerate(lines):
+            raw_query = line.strip()
+            result = sp.search(q=raw_query, type="track", limit=1)
             tracks = result["tracks"]["items"]
 
-          if tracks:
-            track_uris.append(tracks[0]["uri"])
-            status_text.text(
-                f"Encontrada: {tracks[0]['name']} -"
-                f" {tracks[0]['artists'][0]['name']}"
-            )
-          else:
-            status_text.text(f"No encontrada: {raw_query}")
+            if not tracks and "-" in raw_query:
+              clean_query = re.sub(r"[\(\[\{].*?[\)\]\}]", "", raw_query).strip()
+              result = sp.search(q=clean_query, type="track", limit=1)
+              tracks = result["tracks"]["items"]
 
-          progress_bar.progress((i + 1) / len(lines))
-          time.sleep(0.1)
+            if tracks:
+              track_uris.append(tracks[0]["uri"])
+              status_text.text(
+                  f"Encontrada: {tracks[0]['name']} -"
+                  f" {tracks[0]['artists'][0]['name']}"
+              )
+            else:
+              status_text.text(f"No encontrada: {raw_query}")
 
-          if len(track_uris) >= 50:
+            progress_bar.progress((i + 1) / len(lines))
+            time.sleep(0.1)
+
+            if len(track_uris) >= 50:
+              sp.playlist_add_items(playlist_id, track_uris)
+              track_uris = []
+
+          if track_uris:
             sp.playlist_add_items(playlist_id, track_uris)
-            track_uris = []
 
-        if track_uris:
-          sp.playlist_add_items(playlist_id, track_uris)
+          st.success("¡Playlist creada con éxito en tu cuenta de Spotify!")
 
-        st.success("¡Playlist creada con éxito en tu cuenta de Spotify!")
-
-      except Exception as e:
-        st.error(f"Error al conectar con Spotify: {e}")
+        except Exception as e:
+          st.error(f"Error al conectar con Spotify: {e}")
