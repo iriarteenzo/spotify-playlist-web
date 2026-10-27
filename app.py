@@ -25,7 +25,7 @@ st.set_page_config(
 )
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - TAMAÑOS REDUCIDOS Y LÍNEA ÚNICA)
+# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - ESPACIADOS REDUCIDOS)
 # =====================================================================
 st.markdown(
     """
@@ -38,6 +38,12 @@ st.markdown(
         font-family: 'Google Sans', Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
+    /* Reducir padding superior de Streamlit */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+    }
+
     section[data-testid="stSidebar"] {
         background-color: #000000;
         border-right: 1px solid #282828;
@@ -53,18 +59,17 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
-    /* Logo principal */
     .logo-container {
         display: flex;
         align-items: center;
         justify-content: flex-start;
         gap: 4px;
-        font-size: 40px;
+        font-size: 36px;
         font-weight: 800;
         letter-spacing: -0.5px;
         color: #FFFFFF;
-        margin-bottom: 20px;
-        padding-top: 6px;
+        margin-bottom: 10px;
+        padding-top: 2px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .ai-wave-badge {
@@ -73,40 +78,8 @@ st.markdown(
         justify-content: center;
         border: 2px solid #1DB954;
         border-radius: 50%;
-        width: 34px;
-        height: 34px;
-        font-size: 20px;
-        color: #1DB954;
-        font-weight: 800;
-        background-color: rgba(29, 185, 84, 0.1);
-        box-shadow: 0 0 12px rgba(29, 185, 84, 0.4);
-        line-height: 1;
-        vertical-align: middle;
-        flex-shrink: 0;
-    }
-
-    /* Logo barra lateral (20% más pequeño pero 100% idéntico en estructura) */
-    .logo-container-sidebar {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 3px;
-        font-size: 32px;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-        color: #FFFFFF;
-        margin-bottom: 20px;
-        padding-top: 6px;
-        font-family: 'Google Sans', Helvetica, sans-serif;
-    }
-    .ai-wave-badge-sidebar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid #1DB954;
-        border-radius: 50%;
-        width: 27px;
-        height: 27px;
+        width: 30px;
+        height: 30px;
         font-size: 16px;
         color: #1DB954;
         font-weight: 800;
@@ -117,17 +90,48 @@ st.markdown(
         flex-shrink: 0;
     }
 
-    /* Hero Section (Fuentes y tarjetas reducidas un 20%) */
+    .logo-container-sidebar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 3px;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: #FFFFFF;
+        margin-bottom: 14px;
+        padding-top: 4px;
+        font-family: 'Google Sans', Helvetica, sans-serif;
+    }
+    .ai-wave-badge-sidebar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #1DB954;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        font-size: 14px;
+        color: #1DB954;
+        font-weight: 800;
+        background-color: rgba(29, 185, 84, 0.1);
+        box-shadow: 0 0 8px rgba(29, 185, 84, 0.4);
+        line-height: 1;
+        vertical-align: middle;
+        flex-shrink: 0;
+    }
+
+    /* Hero Section Compacto (Visible sin scroll) */
     .hero-container {
-        padding: 5px 0 5px 0;
+        padding: 0px 0 5px 0;
         text-align: left;
     }
     .hero-title {
-        font-size: 33px;
+        font-size: 30px;
         font-weight: 800;
         color: #FFFFFF;
         letter-spacing: -1px;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         display: flex;
         align-items: center;
         justify-content: flex-start;
@@ -137,22 +141,22 @@ st.markdown(
 
     .feature-card {
         background: rgba(255, 255, 255, 0.03);
-        padding: 14px 16px;
-        border-radius: 8px;
+        padding: 10px 14px;
+        border-radius: 6px;
         border-left: 2px solid #1DB954;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
     }
     .feature-title {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 700;
         color: #FFFFFF;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .feature-desc {
-        font-size: 12px;
+        font-size: 11px;
         color: #B3B3B3;
-        line-height: 1.3;
+        line-height: 1.2;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
 
@@ -160,10 +164,10 @@ st.markdown(
         background-color: #1DB954 !important;
         color: #000000 !important;
         font-weight: 500 !important;
-        font-size: 18px !important;
+        font-size: 16px !important;
         border-radius: 500px !important;
         border: none !important;
-        padding: 10px 24px !important;
+        padding: 8px 20px !important;
         box-shadow: 0 4px 14px rgba(29, 185, 84, 0.4);
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
@@ -182,8 +186,9 @@ st.markdown(
         border: 1px solid #3E3E3E;
         border-radius: 500px;
         font-weight: 500;
-        padding: 8px 18px;
+        padding: 6px 14px;
         font-family: 'Google Sans', Helvetica, sans-serif;
+        font-size: 13px;
     }
     .stButton>button:hover {
         border-color: #FFFFFF;
@@ -200,8 +205,8 @@ st.markdown(
         -webkit-text-fill-color: #000000 !important;
         border: 1px solid #3E3E3E !important;
         border-radius: 8px;
-        padding: 12px;
-        font-size: 15px;
+        padding: 10px;
+        font-size: 14px;
         font-weight: 500 !important;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
@@ -221,7 +226,7 @@ st.markdown(
         background-color: #181818;
         border: 1px dashed #3E3E3E;
         border-radius: 12px;
-        padding: 20px;
+        padding: 14px;
     }
     div[data-testid="stFileUploader"] section {
         background-color: #d6d6d6 !important;
@@ -249,7 +254,7 @@ st.markdown(
     }
     p, label {
         color: #B3B3B3 !important;
-        font-size: 14px;
+        font-size: 13px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     </style>
@@ -279,7 +284,7 @@ if "playlist_creada_url" not in st.session_state:
   st.session_state["playlist_creada_url"] = ""
 
 # =====================================================================
-# BLOQUE 4: BARRA LATERAL
+# 4. BARRA LATERAL
 # =====================================================================
 with st.sidebar:
   st.markdown(
@@ -293,14 +298,14 @@ with st.sidebar:
 
   st.markdown("---")
   st.markdown(
-      "<h3 style='font-size: 14px; text-transform: uppercase; letter-spacing:"
+      "<h3 style='font-size: 13px; text-transform: uppercase; letter-spacing:"
       " 1px;'>Últimas playlists</h3>",
       unsafe_allow_html=True,
   )
 
   if len(st.session_state["history_playlists"]) == 0:
     st.markdown(
-        "<p style='color: #727272; font-style: italic; margin-bottom: 12px;'>Aún"
+        "<p style='color: #727272; font-style: italic; margin-bottom: 10px;'>Aún"
         " no hay playlists creadas. ¡Crea una nueva playlist para empezar!</p>",
         unsafe_allow_html=True,
     )
@@ -316,7 +321,7 @@ with st.sidebar:
 
     for pl in recent_playlists:
       st.markdown(
-          f"<p style='color: #FFFFFF; font-size: 13px; margin: 6px 0;"
+          f"<p style='color: #FFFFFF; font-size: 13px; margin: 5px 0;"
           f" font-weight: 500;'>• {pl}</p>",
           unsafe_allow_html=True,
       )
@@ -332,9 +337,8 @@ with st.sidebar:
         ]
         st.rerun()
 
-  st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
+  st.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
 
-  # Botón primario verde en la barra lateral para crear nueva playlist
   if st.button(
       "Crear una nueva playlist",
       key="btn_sidebar_crear",
@@ -354,49 +358,49 @@ with st.sidebar:
   )
 
 # =====================================================================
-# BLOQUE 1: HERO SECTION (PÁGINA PRINCIPAL)
+# 1. HERO SECTION (Se oculta dinámicamente al interactuar para evitar scroll)
 # =====================================================================
-st.markdown('<div class="hero-container">', unsafe_allow_html=True)
-st.markdown(
-    """
-    <div class="hero-title">
-        pl<div class="ai-wave-badge" style="width: 29px; height: 29px; font-size: 16px;">ai</div>lister
-    </div>
-""",
-    unsafe_allow_html=True,
-)
+if st.session_state["paso_actual"] == "creacion" and st.session_state["modo_creacion"] is None:
+  st.markdown('<div class="hero-container">', unsafe_allow_html=True)
+  st.markdown(
+      """
+      <div class="hero-title">
+          pl<div class="ai-wave-badge" style="width: 26px; height: 26px; font-size: 14px;">ai</div>lister
+      </div>
+  """,
+      unsafe_allow_html=True,
+  )
 
-st.markdown(
-    """
-    <div class="feature-card">
-        <div class="feature-title">Genera nuevas playlists con IA</div>
-        <div class="feature-desc">Crea colecciones musicales personalizadas al instante describiendo lo que quieres escuchar.</div>
-    </div>
-    <div class="feature-card">
-        <div class="feature-title">Descubre nuevos artistas</div>
-        <div class="feature-desc">Amplia tus gustos musicales con recomendaciones que no te imaginabas.</div>
-    </div>
-    <div class="feature-card">
-        <div class="feature-title">Conecta tu nueva música a Spotify</div>
-        <div class="feature-desc">Tu biblioteca de Spotify, ahora con más música.</div>
-    </div>
-""",
-    unsafe_allow_html=True,
-)
-st.markdown("</div>", unsafe_allow_html=True)
-st.markdown("---")
+  st.markdown(
+      """
+      <div class="feature-card">
+          <div class="feature-title">Genera nuevas playlists con IA</div>
+          <div class="feature-desc">Crea colecciones musicales personalizadas al instante describiendo lo que quieres escuchar.</div>
+      </div>
+      <div class="feature-card">
+          <div class="feature-title">Descubre nuevos artistas</div>
+          <div class="feature-desc">Amplia tus gustos musicales con recomendaciones que no te imaginabas.</div>
+      </div>
+      <div class="feature-card">
+          <div class="feature-title">Conecta tu nueva música a Spotify</div>
+          <div class="feature-desc">Tu biblioteca de Spotify, ahora con más música.</div>
+      </div>
+  """,
+      unsafe_allow_html=True,
+  )
+  st.markdown("</div>", unsafe_allow_html=True)
+  st.markdown("---")
 
 # =====================================================================
-# BLOQUE 2: CREACIÓN DE PLAYLISTS (En una sola línea, sin elementos debajo)
+# 2. BLOQUE DE CREACIÓN DE PLAYLISTS (Botones lado a lado en la misma fila)
 # =====================================================================
 if st.session_state["paso_actual"] == "creacion":
   st.markdown(
-      "<h2 style='font-size: 20px; margin-bottom: 10px;'>Creación de"
+      "<h2 style='font-size: 18px; margin-bottom: 8px;'>Creación de"
       " playlists</h2>",
       unsafe_allow_html=True,
   )
 
-  # Botones de selección en la misma línea horizontal exacta
   col_sel1, col_sel2 = st.columns(2)
   with col_sel1:
     if st.button("Generar nueva playlist con IA", use_container_width=True):
@@ -407,17 +411,15 @@ if st.session_state["paso_actual"] == "creacion":
       st.session_state["modo_creacion"] = "Subir un archivo .txt"
       st.rerun()
 
-  st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
-
   # -----------------------------------------------------------------
-  # OPCIÓN 2.a: Generar Playlist con IA (Exclusivo con IA real)
+  # OPCIÓN 2.a: Generar Playlist con IA
   # -----------------------------------------------------------------
   if st.session_state["modo_creacion"] == "Generar nueva playlist con IA":
-    st.markdown("---")
+    st.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
     prompt_usuario = st.text_area(
         "Describe la música que deseas generar:",
         value="",
-        height=130,
+        height=110,
         key="main_prompt_box",
     )
 
@@ -435,7 +437,7 @@ if st.session_state["paso_actual"] == "creacion":
           "Creatividad", min_value=0.0, max_value=1.0, value=0.7
       )
 
-    st.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
 
     if st.button("Generar playlist", type="primary", use_container_width=True):
       if not prompt_usuario.strip():
@@ -451,7 +453,6 @@ if st.session_state["paso_actual"] == "creacion":
         ):
           try:
             ai_client = genai.Client()
-            # Prompt maestro estricto para garantizar dependencia exclusiva de IA sin respuestas genéricas
             prompt_sistema = (
                 f"Eres un curador musical experto y director de programación artística. "
                 f"Tu única misión es generar una lista EXACTA de {num_canciones} canciones reales, "
@@ -485,12 +486,12 @@ if st.session_state["paso_actual"] == "creacion":
             st.rerun()
 
   # -----------------------------------------------------------------
-  # OPCIÓN 2.b: Subir Archivo TXT (Con botón de continuar inactivo/activo)
+  # OPCIÓN 2.b: Subir Archivo TXT
   # -----------------------------------------------------------------
   elif st.session_state["modo_creacion"] == "Subir un archivo .txt":
-    st.markdown("---")
+    st.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
     st.markdown(
-        "<p style='margin-bottom: 8px;'>Sube un archivo de texto plano (.txt)"
+        "<p style='margin-bottom: 6px;'>Sube un archivo de texto plano (.txt)"
         " con una canción por línea (formato: 'Artista - Canción').</p>",
         unsafe_allow_html=True,
     )
@@ -501,7 +502,7 @@ if st.session_state["paso_actual"] == "creacion":
     if uploaded_file is not None:
       contenido_archivo = uploaded_file.getvalue().decode("utf-8")
       st.markdown(
-          "<p style='color: #1DB954; font-weight: 600; margin-top: 10px;'>✔"
+          "<p style='color: #1DB954; font-weight: 600; margin-top: 8px;'>✔"
           " Archivo cargado con éxito. Visualiza el contenido a"
           " continuación:</p>",
           unsafe_allow_html=True,
@@ -509,12 +510,11 @@ if st.session_state["paso_actual"] == "creacion":
       st.text_area(
           "Texto detectado en el archivo:",
           value=contenido_archivo,
-          height=130,
+          height=110,
           disabled=True,
       )
 
-      st.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
-      # Botón de continuar activo una vez seleccionado el archivo
+      st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
       if st.button(
           "Continuar",
           type="primary",
@@ -525,7 +525,6 @@ if st.session_state["paso_actual"] == "creacion":
         st.session_state["paso_actual"] = "revision"
         st.rerun()
     else:
-      # Modo inactivo visual si aún no hay archivo cargado
       st.button(
           "Continuar",
           disabled=True,
@@ -534,11 +533,11 @@ if st.session_state["paso_actual"] == "creacion":
       )
 
 # =====================================================================
-# FASE DE REVISIÓN Y EDICIÓN (DESCARTE / AJUSTE DE CANCIONES)
+# FASE DE REVISIÓN Y EDICIÓN
 # =====================================================================
 elif st.session_state["paso_actual"] == "revision":
   st.markdown(
-      "<h2 style='font-size: 20px; margin-bottom: 8px;'>Revisión de la"
+      "<h2 style='font-size: 18px; margin-bottom: 6px;'>Revisión de la"
       " playlist</h2>",
       unsafe_allow_html=True,
   )
@@ -551,7 +550,7 @@ elif st.session_state["paso_actual"] == "revision":
   st.session_state["resultado_lista"] = st.text_area(
       "Canciones (Artista - Canción):",
       value=st.session_state["resultado_lista"],
-      height=200,
+      height=180,
       key="editable_result_box",
   )
 
@@ -559,6 +558,7 @@ elif st.session_state["paso_actual"] == "revision":
   with col_r1:
     if st.button("Atrás", use_container_width=True):
       st.session_state["paso_actual"] = "creacion"
+      st.session_state["modo_creacion"] = None
       st.rerun()
   with col_r2:
     if st.button("Continuar a exportar", type="primary", use_container_width=True):
@@ -566,18 +566,18 @@ elif st.session_state["paso_actual"] == "revision":
       st.rerun()
 
 # =====================================================================
-# BLOQUE 3: CREACIÓN DE PLAYLIST EN SPOTIFY, PROGRESO Y MENSAJE FINAL
+# BLOQUE 3: CREACIÓN DE PLAYLIST EN SPOTIFY & MENSAJE FINAL
 # =====================================================================
 elif st.session_state["paso_actual"] == "exportacion":
   st.markdown(
-      "<h2 style='font-size: 20px; margin-bottom: 8px;'>Exportar a Spotify</h2>",
+      "<h2 style='font-size: 18px; margin-bottom: 6px;'>Exportar a Spotify</h2>",
       unsafe_allow_html=True,
   )
 
   nombre_playlist = st.text_input(
       "Nombre de la playlist en Spotify", value="Mi nueva playlist"
   )
-  st.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
+  st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
 
   if st.button("Crear playlist en Spotify", type="primary", use_container_width=True):
     texto_a_procesar = st.session_state.get("resultado_lista", "")
@@ -657,7 +657,7 @@ elif st.session_state["paso_actual"] == "exportacion":
 
 elif st.session_state["paso_actual"] == "exito":
   st.markdown(
-      "<h2 style='font-size: 22px; color: #1DB954 !important;'>¡Playlist"
+      "<h2 style='font-size: 20px; color: #1DB954 !important;'>¡Playlist"
       " creada con éxito!</h2>",
       unsafe_allow_html=True,
   )
@@ -681,12 +681,12 @@ elif st.session_state["paso_actual"] == "exito":
     st.markdown(
         f'<a href="{whatsapp_url}" target="_blank"><button style="width:100%;'
         " background-color:#282828; color:#FFFFFF; border:1px solid"
-        " #3E3E3E; border-radius:500px; padding:10px 18px; font-weight:500;"
-        ' cursor:pointer;">Compartir en WhatsApp</button></a>',
+        " #3E3E3E; border-radius:500px; padding:8px 16px; font-weight:500;"
+        ' cursor:pointer; font-size:13px;">Compartir en WhatsApp</button></a>',
         unsafe_allow_html=True,
     )
 
-  st.markdown("<div style='margin: 14px 0;'></div>", unsafe_allow_html=True)
+  st.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
 
   col_e1, col_e2 = st.columns(2)
   with col_e1:
