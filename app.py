@@ -1,584 +1,667 @@
 
-import json
+import html
 import os
-import re
 import secrets
-from urllib.parse import urlencode
+import time
 
 import streamlit as st
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from google import genai
+from google.genai import types
 
 
-# ============================================================
+# =========================================================
 # CONFIGURACIÓN
-# ============================================================
+# =========================================================
 
 st.set_page_config(
     page_title="pl(ai)lister",
-    page_icon="♫",
-    layout="centered",
+    page_icon="♪",
+    layout="wide",
     initial_sidebar_state="expanded",
 )
 
-DEFAULT_MODEL = "gemini-3.8-flash"
-DEFAULT_TRACK_COUNT = 20
-DEFAULT_ARTIST_COUNT = 12
-
-SPOTIFY_SCOPES = (
-    "playlist-modify-public "
-    "playlist-modify-private"
-)
+DEFAULT_MODEL = "gemini-2.5-flash"
+SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private"
 
 
-def get_setting(name, default=""):
-    """Lee primero Streamlit Secrets y después variables de entorno."""
+def get_secret(key, default=""):
     try:
-        value = st.secrets.get(name, default)
+        return st.secrets.get(key, default) or default
     except Exception:
-        value = default
-
-    return os.getenv(name, value) or default
+        return os.getenv(key, default) or default
 
 
-def get_model_name():
-    """Normaliza nombres de modelos escritos con espacios o prefijos."""
-    model = str(
-        get_setting("GEMINI_MODEL", DEFAULT_MODEL)
-    ).strip().strip("\"'")
-
-    model = re.sub(r"^models/", "", model, flags=re.IGNORECASE)
-    model = model.replace(" ", "-").lower()
-
-    return model or DEFAULT_MODEL
+GEMINI_API_KEY = get_secret("GEMINI_API_KEY")
+GEMINI_MODEL = get_secret("GEMINI_MODEL", DEFAULT_MODEL)
+SPOTIFY_CLIENT_ID = get_secret("SPOTIFY_CLIENT_ID")
+SPOTIFY_CLIENT_SECRET = get_secret("SPOTIFY_CLIENT_SECRET")
+SPOTIFY_REDIRECT_URI = get_secret(
+    "SPOTIFY_REDIRECT_URI",
+    "http://localhost:8501",
+).rstrip("/")
 
 
-def get_spotify_redirect_uri():
-    return str(
-        get_setting("SPOTIFY_REDIRECT_URI", "")
-    ).strip().rstrip("/")
+# =========================================================
+# DESIGN SYSTEM
+# =========================================================
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg: #121212;
+    --surface: #1E1E1E;
+    --surface-hover: #292929;
+    --border: #383838;
+    --text: #F5F5F5;
+    --muted: #A7A7A7;
+    --green: #1ED760;
+    --green-hover: #3BE477;
+    --green-text: #07150B;
+
+    --font: "Google Sans", Arial, sans-serif;
+    --radius: 16px;
+    --radius-pill: 999px;
+    --control-height: 46px;
+}
+
+html, body, [class*="css"], .stApp {
+    font-family: var(--font) !important;
+}
+
+.stApp {
+    background: var(--bg);
+    color: var(--text);
+}
+
+header[data-testid="stHeader"] {
+    background: transparent;
+}
+
+#MainMenu, footer {
+    visibility: hidden;
+}
+
+.block-container {
+    max-width: 880px;
+    padding: 28px 28px 32px !important;
+}
+
+/* Tipografía */
+
+h1, h2, h3, p, label, input, textarea, button {
+    font-family: var(--font) !important;
+}
+
+h1 {
+    color: var(--text) !important;
+    font-size: clamp(30px, 4vw, 40px) !important;
+    font-weight: 600 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -1px !important;
+    margin-bottom: 12px !important;
+}
+
+h2 {
+    color: var(--text) !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    letter-spacing: -.4px !important;
+}
+
+h3 {
+    color: var(--text) !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+}
+
+p {
+    line-height: 1.6;
+}
+
+.muted {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.eyebrow {
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+/* Marca */
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 28px;
+    color: var(--text);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -1.2px;
+    line-height: 1.2;
+}
+
+.brand-ai {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--green);
+    border-radius: 50%;
+    color: var(--green);
+    font-size: 10px;
+    letter-spacing: -.3px;
+}
+
+/* Barra lateral */
+
+section[data-testid="stSidebar"] {
+    background: #090909;
+    border-right: 1px solid #292929;
+}
+
+section[data-testid="stSidebar"] > div {
+    padding: 24px 18px;
+}
+
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+    color: rgba(255,255,255,.9) !important;
+}
+
+section[data-testid="stSidebar"] hr {
+    border-color: #303030;
+    margin: 20px 0;
+}
+
+.sidebar-label {
+    color: rgba(255,255,255,.65);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+/* Botones */
+
+.stButton > button,
+.stLinkButton > a,
+div[data-testid="stFormSubmitButton"] button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--control-height) !important;
+    height: var(--control-height);
+    padding: 0 18px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-pill) !important;
+    background: var(--surface-hover) !important;
+    color: var(--text) !important;
+    font-family: var(--font) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.stButton > button:hover,
+.stLinkButton > a:hover {
+    background: #353535 !important;
+    border-color: #555 !important;
+    color: #fff !important;
+}
+
+.stButton > button[kind="primary"],
+div[data-testid="stFormSubmitButton"] button,
+.stLinkButton > a[kind="primary"] {
+    background: var(--green) !important;
+    border-color: var(--green) !important;
+    color: var(--green-text) !important;
+}
+
+.stButton > button[kind="primary"]:hover,
+div[data-testid="stFormSubmitButton"] button:hover,
+.stLinkButton > a[kind="primary"]:hover {
+    background: var(--green-hover) !important;
+    border-color: var(--green-hover) !important;
+    color: var(--green-text) !important;
+}
+
+.stButton > button:focus-visible,
+.stLinkButton > a:focus-visible {
+    outline: 2px solid var(--green) !important;
+    outline-offset: 3px !important;
+}
+
+/* Campos */
+
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stTextInput"] input {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    font-family: var(--font) !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    padding: 14px 16px !important;
+    box-shadow: none !important;
+}
+
+div[data-testid="stTextArea"] textarea:focus,
+div[data-testid="stTextInput"] input:focus {
+    border-color: #777 !important;
+    box-shadow: 0 0 0 1px #777 !important;
+}
+
+textarea::placeholder,
+input::placeholder {
+    color: #999 !important;
+    opacity: 1 !important;
+}
+
+div[data-testid="stTextArea"] label,
+div[data-testid="stTextInput"] label {
+    color: var(--text) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    margin-bottom: 8px !important;
+}
+
+/* Composer */
+
+.composer {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    margin: 24px 0 16px;
+}
+
+.st-key-prompt_input textarea {
+    min-height: 120px !important;
+    background: transparent !important;
+    border: 0 !important;
+    padding: 8px 2px !important;
+    font-size: 15px !important;
+}
+
+.st-key-prompt_input textarea:focus {
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.st-key-prompt_input [data-baseweb="textarea"] {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.st-key-adjust_button button,
+.st-key-generate_button button {
+    width: 100% !important;
+    min-height: 46px !important;
+    height: 46px !important;
+}
+
+/* Slider */
+
+div[data-testid="stSlider"] [role="slider"] {
+    background: var(--green) !important;
+    border-color: var(--green) !important;
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin: -4px 0 16px;
+}
+
+.slider-side {
+    color: var(--muted);
+    flex: 1;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.slider-side strong {
+    display: block;
+    color: var(--text);
+    font-size: 11px;
+    letter-spacing: .6px;
+    margin-bottom: 3px;
+}
+
+.slider-side:last-child {
+    text-align: right;
+}
+
+/* Modal */
+
+div[data-testid="stDialog"] > div,
+div[role="dialog"] {
+    background: #181818 !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 20px !important;
+}
+
+/* Canciones */
+
+.track-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 4px;
+    border-bottom: 1px solid #303030;
+}
+
+.track-index {
+    width: 24px;
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.track-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.track-title {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.track-artist {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.track-album {
+    color: #888;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.track-link {
+    color: var(--green);
+    font-size: 12px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin: 16px 0;
+}
+
+hr {
+    border-color: #303030;
+}
+
+/* Adaptación móvil */
+
+@media (max-width: 760px) {
+    .block-container {
+        padding: 20px 16px 28px !important;
+    }
+
+    .brand {
+        margin-bottom: 22px;
+    }
+
+    .composer {
+        padding: 14px;
+        border-radius: 16px;
+        margin-top: 20px;
+    }
+
+    h1 {
+        font-size: 31px !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
 
 
-def get_spotify_oauth():
-    client_id = get_setting("SPOTIFY_CLIENT_ID")
-    client_secret = get_setting("SPOTIFY_CLIENT_SECRET")
-    redirect_uri = get_spotify_redirect_uri()
+# =========================================================
+# ICONOS
+# =========================================================
 
-    if not client_id or not client_secret or not redirect_uri:
-        raise ValueError(
-            "Falta configurar SPOTIFY_CLIENT_ID, "
-            "SPOTIFY_CLIENT_SECRET o SPOTIFY_REDIRECT_URI."
-        )
+ICONS = {
+    "external": (
+        '<path d="M15 3h6v6"/>'
+        '<path d="M10 14 21 3"/>'
+        '<path d="M19 13v6a2 2 0 0 1-2 2H5'
+        'a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/>'
+    ),
+    "check": '<path d="m5 12 4 4L19 6"/>',
+    "spotify": (
+        '<circle cx="12" cy="12" r="10" fill="#1ED760" stroke="none"/>'
+        '<path d="M6.5 9.2c3.9-1.2 8.5-.8 11.2 1" '
+        'stroke="#07150B" stroke-width="1.7"/>'
+        '<path d="M7.2 12.2c3.2-1 7-.6 9.4 1" '
+        'stroke="#07150B" stroke-width="1.5"/>'
+        '<path d="M7.8 15c2.7-.7 5.5-.4 7.5.8" '
+        'stroke="#07150B" stroke-width="1.4"/>'
+    ),
+}
+
+
+def icon(name, size=18):
+    return (
+        f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" '
+        'fill="none" stroke="currentColor" stroke-width="1.7" '
+        'stroke-linecap="round" stroke-linejoin="round" '
+        'aria-hidden="true">'
+        f'{ICONS[name]}</svg>'
+    )
+
+
+def brand():
+    st.markdown(
+        '<div class="brand">pl'
+        '<span class="brand-ai">ai</span>lister</div>',
+        unsafe_allow_html=True,
+    )
+
+
+# =========================================================
+# SPOTIFY
+# =========================================================
+
+def spotify_oauth():
+    if not SPOTIFY_CLIENT_ID or not SPOTIFY_CLIENT_SECRET:
+        return None
 
     return SpotifyOAuth(
-        client_id=client_id,
-        client_secret=client_secret,
-        redirect_uri=redirect_uri,
+        client_id=SPOTIFY_CLIENT_ID,
+        client_secret=SPOTIFY_CLIENT_SECRET,
+        redirect_uri=SPOTIFY_REDIRECT_URI,
         scope=SPOTIFY_SCOPES,
         cache_path=None,
         open_browser=False,
     )
 
 
-# ============================================================
-# ESTADO DE LA APLICACIÓN
-# ============================================================
-
-DEFAULT_STATE = {
-    "step": "create",
-    "prompt": "",
-    "count": DEFAULT_TRACK_COUNT,
-    "artist_count": DEFAULT_ARTIST_COUNT,
-    "temperature": 0.7,
-    "tracks": [],
-    "resolved": [],
-    "missing": [],
-    "playlist_name": "",
-    "playlist_url": "",
-    "spotify_token": None,
-    "oauth_state": None,
-    "history": [],
-    "review_text": "",
-    "last_error": "",
-}
-
-for key, value in DEFAULT_STATE.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
-
-
-def reset_app():
-    """Inicia una playlist nueva sin desconectar Spotify."""
-    keep = {
-        "spotify_token": st.session_state.get("spotify_token"),
-    }
-
-    for key, value in DEFAULT_STATE.items():
-        st.session_state[key] = value
-
-    st.session_state.spotify_token = keep["spotify_token"]
-
-
-# ============================================================
-# ESTILO
-# ============================================================
-
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
-
-    :root {
-        --bg: #101010;
-        --panel: #191919;
-        --panel-hover: #242424;
-        --text: #f5f5f5;
-        --muted: #b3b3b3;
-        --subtle: #777777;
-        --green: #1ed760;
-        --border: #303030;
-    }
-
-    html, body, [class*="css"], [data-testid="stAppViewContainer"] {
-        font-family: 'Google Sans', Arial, sans-serif;
-    }
-
-    .stApp {
-        background: var(--bg);
-        color: var(--text);
-    }
-
-    [data-testid="stHeader"] {
-        background: transparent;
-    }
-
-    [data-testid="stSidebar"] {
-        background: #090909;
-        border-right: 1px solid var(--border);
-    }
-
-    [data-testid="stSidebar"] * {
-        color: #e8e8e8;
-    }
-
-    .block-container {
-        max-width: 860px;
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-
-    h1, h2, h3, p, label {
-        color: var(--text);
-        font-family: 'Google Sans', Arial, sans-serif;
-    }
-
-    h1 {
-        font-size: 2.25rem !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.06em;
-    }
-
-    h2 {
-        font-size: 1.35rem !important;
-        font-weight: 600 !important;
-        letter-spacing: -0.025em;
-    }
-
-    .brand {
-        font-size: 1.15rem;
-        font-weight: 700;
-        letter-spacing: -0.04em;
-        margin: 0.2rem 0 2rem 0;
-    }
-
-    .brand span {
-        color: var(--green);
-    }
-
-    .eyebrow {
-        color: var(--muted);
-        font-size: 0.76rem;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-    }
-
-    .muted {
-        color: var(--muted);
-        font-size: 0.92rem;
-        line-height: 1.55;
-    }
-
-    .panel {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.25rem;
-        margin: 0.7rem 0 1rem 0;
-    }
-
-    .stTextArea textarea,
-    .stTextInput input,
-    .stNumberInput input {
-        background: #202020 !important;
-        color: var(--text) !important;
-        border: 1px solid #393939 !important;
-        border-radius: 12px !important;
-    }
-
-    .stTextArea textarea:focus,
-    .stTextInput input:focus {
-        border-color: var(--green) !important;
-        box-shadow: 0 0 0 1px var(--green) !important;
-    }
-
-    .stSlider [data-baseweb="slider"] div[role="slider"] {
-        background: var(--green) !important;
-    }
-
-    .stButton > button,
-    .stLinkButton > a,
-    .stDownloadButton > button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 44px;
-        width: 100%;
-        border-radius: 999px;
-        font-family: 'Google Sans', Arial, sans-serif;
-        font-size: 0.92rem;
-        font-weight: 600;
-        border: 1px solid #484848;
-        transition: background 0.15s ease, transform 0.15s ease;
-    }
-
-    .stButton > button[kind="primary"],
-    .stLinkButton > a[kind="primary"] {
-        background: var(--green) !important;
-        color: #07190c !important;
-        border-color: var(--green) !important;
-    }
-
-    .stButton > button[kind="secondary"],
-    .stLinkButton > a[kind="secondary"] {
-        background: #242424 !important;
-        color: var(--text) !important;
-    }
-
-    .stButton > button:hover,
-    .stLinkButton > a:hover {
-        filter: brightness(1.08);
-        transform: translateY(-1px);
-    }
-
-    div[data-testid="stForm"] {
-        border: 0;
-        padding: 0;
-    }
-
-    div[data-testid="stMetric"] {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        padding: 0.8rem;
-        border-radius: 12px;
-    }
-
-    [data-testid="stAlert"] {
-        border-radius: 12px;
-    }
-
-    hr {
-        border-color: var(--border);
-    }
-
-    a {
-        color: var(--green);
-    }
-
-    .track-row {
-        border-bottom: 1px solid var(--border);
-        padding: 0.65rem 0;
-        color: var(--text);
-    }
-
-    .small-note {
-        font-size: 0.78rem;
-        color: var(--muted);
-    }
-
-    footer {
-        visibility: hidden;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-
-# ============================================================
-# SPOTIFY: AUTORIZACIÓN Y TOKEN
-# ============================================================
-
-def process_spotify_callback():
-    """Procesa el retorno de Spotify en la misma página de Streamlit."""
-    params = st.query_params
-
-    error = params.get("error")
-    code = params.get("code")
-    returned_state = params.get("state")
-    expected_state = st.session_state.get("oauth_state")
-
-    if error:
-        st.session_state.last_error = (
-            f"Spotify no autorizó la conexión: {error}"
-        )
-        st.session_state.oauth_state = None
-        st.query_params.clear()
-        return
-
-    if not code:
-        return
-
-    if not expected_state or returned_state != expected_state:
-        st.session_state.last_error = (
-            "No se pudo validar la sesión de Spotify. "
-            "Vuelve a pulsar «Conectar con Spotify»."
-        )
-        st.session_state.oauth_state = None
-        st.query_params.clear()
-        return
-
-    try:
-        oauth = get_spotify_oauth()
-        token_info = oauth.get_access_token(
-            code=code,
-            as_dict=True,
-            check_cache=False,
-        )
-
-        if not token_info or not token_info.get("access_token"):
-            raise RuntimeError(
-                "Spotify no devolvió un token de acceso válido."
-            )
-
-        st.session_state.spotify_token = token_info
-        st.session_state.oauth_state = None
-        st.session_state.last_error = ""
-
-    except Exception as exc:
-        st.session_state.last_error = (
-            "No se pudo completar la conexión con Spotify. "
-            f"Detalle: {exc}"
-        )
-
-    finally:
-        st.query_params.clear()
-
-
-def get_spotify_client():
-    token_info = st.session_state.get("spotify_token")
-
-    if not token_info:
+def spotify_client():
+    token = st.session_state.get("spotify_token")
+    if not token:
         return None
 
-    try:
-        oauth = get_spotify_oauth()
-
-        if oauth.is_token_expired(token_info):
-            refreshed = oauth.refresh_access_token(
-                token_info["refresh_token"]
-            )
-            st.session_state.spotify_token = refreshed
-            token_info = refreshed
-
-        return spotipy.Spotify(
-            auth=token_info["access_token"],
-            requests_timeout=20,
-            retries=2,
-        )
-
-    except Exception as exc:
-        st.session_state.last_error = (
-            f"Error al renovar la sesión de Spotify: {exc}"
-        )
-        st.session_state.spotify_token = None
+    oauth = spotify_oauth()
+    if not oauth:
         return None
 
+    if token.get("expires_at", 0) < time.time() + 60:
+        refresh_token = token.get("refresh_token")
+        if not refresh_token:
+            st.session_state.pop("spotify_token", None)
+            return None
 
-def spotify_authorize_url():
-    oauth = get_spotify_oauth()
-    state = secrets.token_urlsafe(24)
+        try:
+            token = oauth.refresh_access_token(refresh_token)
+            st.session_state.spotify_token = token
+        except Exception:
+            st.session_state.pop("spotify_token", None)
+            return None
 
-    st.session_state.oauth_state = state
-
-    # Spotipy incorpora client_id, redirect_uri, scopes y state.
-    return oauth.get_authorize_url(state=state)
-
-
-process_spotify_callback()
+    return spotipy.Spotify(auth=token["access_token"])
 
 
-# ============================================================
-# GEMINI: GENERACIÓN DE PLAYLIST
-# ============================================================
+def spotify_connect_button():
+    oauth = spotify_oauth()
 
-def generate_playlist(prompt, count, artist_count, creativity):
-    api_key = get_setting("GEMINI_API_KEY")
+    if not oauth:
+        st.caption("Configura las credenciales de Spotify en Secrets.")
+        return
 
-    if not api_key:
-        raise ValueError(
-            "Falta GEMINI_API_KEY en Streamlit Secrets "
-            "o en las variables de entorno."
-        )
+    if not st.session_state.get("oauth_state"):
+        st.session_state.oauth_state = secrets.token_urlsafe(24)
 
-    # Importante: usamos el identificador API, no el nombre comercial.
-    model = get_model_name()
-    client = genai.Client(api_key=api_key)
+    url = html.escape(
+        oauth.get_authorize_url(state=st.session_state.oauth_state),
+        quote=True,
+    )
 
-    temperature = max(0.1, min(1.5, float(creativity)))
+    st.markdown(
+        f'<a href="{url}" target="_self" style="'
+        'display:flex;align-items:center;justify-content:center;gap:10px;'
+        'height:46px;padding:0 16px;background:#1ED760;color:#07150B;'
+        'border:1px solid #1ED760;border-radius:999px;text-decoration:none;'
+        'font-family:Google Sans,Arial,sans-serif;font-size:14px;'
+        'font-weight:600">'
+        f'{icon("spotify", 20)}Conectar con Spotify</a>',
+        unsafe_allow_html=True,
+    )
+
+
+# =========================================================
+# GEMINI
+# =========================================================
+
+def generate_tracks(prompt, count, artist_count, temperature):
+    client = genai.Client(api_key=GEMINI_API_KEY)
 
     instructions = f"""
-Eres un experto curador musical. Crea una selección de canciones
-para una playlist de Spotify a partir de la petición del usuario.
+Actúa como curador musical experto.
 
-PETICIÓN:
-{prompt}
+Devuelve únicamente JSON válido con esta estructura:
+{{"tracks":[{{"artist":"artista","title":"canción"}}]}}
 
-REQUISITOS:
-- Devuelve exactamente {count} canciones.
-- Intenta incluir al menos {artist_count} artistas diferentes.
-- Prioriza canciones reales y publicadas.
-- No inventes títulos ni artistas.
-- Mantén la coherencia musical con la petición.
-- Evita repetir canciones.
-- Responde exclusivamente con JSON válido, sin Markdown ni comentarios.
-- Usa este formato:
-{{
-  "playlist_name": "Nombre breve de la playlist",
-  "tracks": [
-    {{"artist": "Nombre del artista", "title": "Título de la canción"}}
-  ]
-}}
+Genera {count} canciones reales y distintas de aproximadamente
+{artist_count} artistas diferentes.
+
+Respeta el género, época, idioma, ambiente, referencias y exclusiones
+del usuario. No inventes canciones. Evita duplicados.
+No incluyas explicaciones ni Markdown.
 """
 
     response = client.models.generate_content(
-        model=model,
-        contents=instructions,
-        config={
-            "temperature": temperature,
-            "response_mime_type": "application/json",
-        },
+        model=GEMINI_MODEL,
+        contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
+        config=types.GenerateContentConfig(
+            temperature=temperature,
+            response_mime_type="application/json",
+        ),
     )
 
-    text = getattr(response, "text", None)
-
-    if not text:
-        raise RuntimeError(
-            "Gemini devolvió una respuesta vacía. "
-            "Intenta generar la playlist otra vez."
-        )
-
-    # Elimina cercas Markdown por si el modelo las devuelve.
-    text = text.strip()
-    text = re.sub(r"^```(?:json)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
+    import json
 
     try:
-        data = json.loads(text)
+        data = json.loads(response.text or "")
     except json.JSONDecodeError as exc:
-        raise RuntimeError(
-            "Gemini no devolvió un JSON válido. "
-            "Intenta generar la selección otra vez."
-        ) from exc
+        raise ValueError("Gemini devolvió una respuesta no válida.") from exc
 
-    raw_tracks = data.get("tracks", [])
     tracks = []
     seen = set()
 
-    for item in raw_tracks:
+    for item in data.get("tracks", []):
         if not isinstance(item, dict):
             continue
 
         artist = str(item.get("artist", "")).strip()
         title = str(item.get("title", "")).strip()
-
-        if not artist or not title:
-            continue
-
         key = (artist.casefold(), title.casefold())
 
-        if key in seen:
-            continue
+        if artist and title and key not in seen:
+            tracks.append({"artist": artist, "title": title})
+            seen.add(key)
 
-        seen.add(key)
-        tracks.append({
-            "artist": artist,
-            "title": title,
-        })
-
-        if len(tracks) >= count:
+        if len(tracks) == count:
             break
 
-    if not tracks:
-        raise RuntimeError(
-            "Gemini no generó canciones utilizables. "
-            "Prueba con una descripción más concreta."
+    if len(tracks) < count:
+        raise ValueError(
+            f"Solo se recibieron {len(tracks)} canciones válidas "
+            f"de las {count} solicitadas. Prueba otra petición."
         )
 
-    playlist_name = str(
-        data.get("playlist_name", "")
-    ).strip() or "Mi playlist pl(ai)lister"
-
-    return playlist_name, tracks
+    return tracks
 
 
-# ============================================================
-# SPOTIFY: BÚSQUEDA Y EXPORTACIÓN
-# ============================================================
+# =========================================================
+# BÚSQUEDA DE CANCIONES
+# =========================================================
 
 def find_spotify_tracks(sp, tracks):
-    resolved = []
-    missing = []
+    found, missing = [], []
+    seen_uris = set()
 
-    progress = st.progress(0, text="Buscando canciones en Spotify…")
+    progress = st.progress(0, text="Buscando en Spotify…")
 
-    for index, track in enumerate(tracks):
-        artist = track["artist"]
-        title = track["title"]
+    for i, track in enumerate(tracks):
+        query = f'track:"{track["title"]}" artist:"{track["artist"]}"'
 
         try:
-            result = sp.search(
-                q=f'track:"{title}" artist:"{artist}"',
-                type="track",
-                limit=5,
-            )
-
+            result = sp.search(q=query, type="track", limit=5)
             items = result.get("tracks", {}).get("items", [])
 
             if not items:
-                # Segunda búsqueda más flexible.
                 result = sp.search(
-                    q=f"{title} {artist}",
+                    q=f'{track["title"]} {track["artist"]}',
                     type="track",
                     limit=5,
                 )
                 items = result.get("tracks", {}).get("items", [])
 
-            if items:
-                selected = items[0]
-                resolved.append({
-                    "artist": artist,
-                    "title": title,
-                    "spotify_artist": ", ".join(
-                        artist_obj["name"]
-                        for artist_obj in selected.get("artists", [])
+            match = next(
+                (item for item in items if item["uri"] not in seen_uris),
+                None,
+            )
+
+            if match:
+                seen_uris.add(match["uri"])
+                found.append({
+                    "title": match["name"],
+                    "artist": ", ".join(
+                        a["name"] for a in match.get("artists", [])
                     ),
-                    "spotify_title": selected.get("name", title),
-                    "uri": selected["uri"],
-                    "url": selected.get("external_urls", {}).get(
-                        "spotify", ""
-                    ),
+                    "album": match.get("album", {}).get("name", ""),
+                    "uri": match["uri"],
+                    "url": match.get("external_urls", {}).get("spotify", ""),
                 })
             else:
                 missing.append(track)
@@ -587,482 +670,478 @@ def find_spotify_tracks(sp, tracks):
             missing.append(track)
 
         progress.progress(
-            (index + 1) / max(len(tracks), 1),
-            text=f"Buscando canciones: {index + 1}/{len(tracks)}",
+            (i + 1) / max(len(tracks), 1),
+            text=f"Buscando en Spotify… {i + 1}/{len(tracks)}",
         )
 
     progress.empty()
-    return resolved, missing
+    return found, missing
 
 
-def create_spotify_playlist(sp, playlist_name, tracks):
-    user = sp.current_user()
-    user_id = user["id"]
+# =========================================================
+# ESTADO DE LA APP
+# =========================================================
 
-    playlist = sp.user_playlist_create(
-        user=user_id,
-        name=playlist_name,
-        public=False,
-        description="Creada con pl(ai)lister.",
-    )
+DEFAULTS = {
+    "step": "create",
+    "prompt": "",
+    "count": 15,
+    "artist_count": 5,
+    "temperature": 0.7,
+    "history": [],
+    "tracks": [],
+    "resolved": [],
+    "missing": [],
+    "playlist_name": "",
+    "playlist_url": "",
+}
 
-    uris = [track["uri"] for track in tracks]
-
-    # Spotify admite hasta 100 canciones por solicitud.
-    for start in range(0, len(uris), 100):
-        sp.playlist_add_items(
-            playlist["id"],
-            uris[start:start + 100],
-        )
-
-    return playlist.get("external_urls", {}).get("spotify", "")
+for key, value in DEFAULTS.items():
+    st.session_state.setdefault(key, value)
 
 
-# ============================================================
-# CABECERA Y BARRA LATERAL
-# ============================================================
+def reset_app():
+    for key in (
+        "tracks", "resolved", "missing",
+        "playlist_name", "playlist_url", "review_text",
+    ):
+        st.session_state.pop(key, None)
 
-with st.sidebar:
+    st.session_state.step = "create"
+    st.session_state.prompt = ""
+
+
+# =========================================================
+# MODAL DE AJUSTES
+# =========================================================
+
+@st.dialog("Ajustes de generación", width="small")
+def settings_dialog():
     st.markdown(
-        '<div class="brand">pl(<span>ai</span>)lister</div>',
+        '<p class="muted">Personaliza tu selección musical.</p>',
         unsafe_allow_html=True,
     )
 
-    st.caption("TU GUSTO. TU PROMPT. TU PLAYLIST.")
+    st.slider("Cantidad de canciones", 5, 50, key="count")
+    st.slider("Cantidad de artistas", 1, 15, key="artist_count")
 
-    if st.button(
-        "＋  Nueva playlist",
-        key="new_playlist",
-        type="primary",
-        use_container_width=True,
-    ):
+    st.markdown("**Creatividad**")
+
+    st.slider(
+        "Creatividad",
+        0.0, 1.0,
+        step=0.1,
+        key="temperature",
+        label_visibility="collapsed",
+    )
+
+    st.markdown(
+        '<div class="slider-labels">'
+        '<div class="slider-side"><strong>BAJA</strong>'
+        'Prioriza resultados previsibles</div>'
+        '<div class="slider-side"><strong>ALTA</strong>'
+        'Permite mezclas más inesperadas</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    if st.button("Guardar ajustes", type="primary", use_container_width=True):
+        st.rerun()
+
+
+# =========================================================
+# CALLBACK DE SPOTIFY
+# =========================================================
+
+params = st.query_params
+
+if params.get("error"):
+    st.session_state.pop("oauth_state", None)
+    st.query_params.clear()
+    st.error("La autorización de Spotify fue cancelada o rechazada.")
+
+elif params.get("code"):
+    oauth = spotify_oauth()
+    state_received = params.get("state", "")
+    state_expected = st.session_state.get("oauth_state", "")
+
+    if oauth and state_expected and state_received == state_expected:
+        try:
+            token = oauth.get_access_token(
+                params["code"],
+                check_cache=False,
+            )
+            st.session_state.spotify_token = token
+            st.session_state.pop("oauth_state", None)
+            st.query_params.clear()
+            st.rerun()
+        except Exception:
+            st.error(
+                "No se pudo conectar con Spotify. "
+                "Comprueba las credenciales y la URL de redirección."
+            )
+    else:
+        st.session_state.pop("oauth_state", None)
+        st.query_params.clear()
+        st.error("No se pudo validar la autorización de Spotify.")
+
+
+# =========================================================
+# BARRA LATERAL
+# =========================================================
+
+with st.sidebar:
+    brand()
+
+    st.markdown('<div class="sidebar-label">Playlists</div>',
+                unsafe_allow_html=True)
+
+    if st.button("＋  Nueva playlist", type="primary",
+                 use_container_width=True):
         reset_app()
         st.rerun()
 
     st.divider()
 
-    st.markdown("**Spotify**")
+    st.markdown('<div class="sidebar-label">Historial reciente</div>',
+                unsafe_allow_html=True)
 
-    connected = bool(st.session_state.get("spotify_token"))
-
-    if connected:
-        st.success("Spotify conectado")
-
-        if st.button(
-            "Desconectar Spotify",
-            key="disconnect_spotify",
-            use_container_width=True,
-        ):
-            st.session_state.spotify_token = None
-            st.session_state.oauth_state = None
-            st.rerun()
-
+    if not st.session_state.history:
+        st.caption("Tus playlists aparecerán aquí.")
     else:
-        try:
-            auth_url = spotify_authorize_url()
-
-            st.markdown(
-                f"""
-                <a href="{auth_url}" target="_self"
-                   style="
-                     display:flex;
-                     align-items:center;
-                     justify-content:center;
-                     gap:10px;
-                     width:100%;
-                     box-sizing:border-box;
-                     min-height:44px;
-                     padding:10px 14px;
-                     background:#1ed760;
-                     color:#07190c;
-                     text-decoration:none;
-                     border-radius:999px;
-                     font-weight:600;
-                     font-size:14px;
-                   ">
-                    <svg width="20" height="20" viewBox="0 0 24 24"
-                         fill="currentColor" aria-hidden="true">
-                        <path d="M12 1.8a10.2 10.2 0 1 0 0 20.4
-                        10.2 10.2 0 0 0 0-20.4zm4.68 14.72a.63.63
-                        0 0 1-.87.21c-2.38-1.45-5.37-1.78-8.9-.98a.63.63
-                        0 1 1-.28-1.23c3.86-.88 7.17-.49 9.84 1.13
-                        .3.18.4.57.21.87zm1.24-2.76a.78.78 0 0 1-1.07.26
-                        c-2.72-1.67-6.87-2.15-10.09-1.18a.78.78 0 1
-                        1-.45-1.49c3.68-1.11 8.25-.57 11.35 1.34
-                        .37.22.49.7.26 1.07zm.1-2.87c-3.27-1.94-8.68-2.12
-                        -11.8-1.17a.94.94 0 1 1-.55-1.8c3.58-1.09
-                        9.54-.88 13.31 1.35a.94.94 0 0 1-.96 1.62z"/>
-                    </svg>
-                    Conectar con Spotify
-                </a>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        except ValueError as exc:
-            st.warning(str(exc))
-
-    with st.expander("Ajustes"):
-        st.markdown("**Número de canciones**")
-        st.slider(
-            "Canciones",
-            min_value=5,
-            max_value=50,
-            step=5,
-            key="count",
-            label_visibility="collapsed",
-        )
-
-        st.markdown("**Diversidad de artistas**")
-        st.slider(
-            "Artistas",
-            min_value=3,
-            max_value=30,
-            step=1,
-            key="artist_count",
-            label_visibility="collapsed",
-        )
-
-        st.markdown("**Creatividad**")
-        st.slider(
-            "Creatividad",
-            min_value=0.1,
-            max_value=1.5,
-            step=0.1,
-            key="temperature",
-            label_visibility="collapsed",
-        )
-        st.caption("BAJA: prioriza resultados previsibles")
-        st.caption("ALTA: permite mezclas más inesperadas")
+        for item in reversed(st.session_state.history[-10:]):
+            if st.button(item["name"], key=f'history_{item["id"]}',
+                         use_container_width=True):
+                st.session_state.playlist_name = item["name"]
+                st.session_state.playlist_url = item["url"]
+                st.session_state.step = "success"
+                st.rerun()
 
     st.divider()
-    st.caption("Hecho para descubrir música.")
+
+    st.markdown('<div class="sidebar-label">Spotify</div>',
+                unsafe_allow_html=True)
+
+    if spotify_client():
+        st.markdown(
+            '<p style="color:#1ED760;font-size:13px;font-weight:600">'
+            '● Conectado</p>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Desconectar", use_container_width=True):
+            st.session_state.pop("spotify_token", None)
+            st.rerun()
+    else:
+        spotify_connect_button()
+
+    if not GEMINI_API_KEY:
+        st.warning("Falta GEMINI_API_KEY en Secrets.")
 
 
-# Mostrar errores que vienen de un callback o acción anterior.
-if st.session_state.get("last_error"):
-    st.error(st.session_state.last_error)
-
-
-# ============================================================
-# PANTALLA: CREAR
-# ============================================================
+# =========================================================
+# CREAR PLAYLIST
+# =========================================================
 
 if st.session_state.step == "create":
+    brand()
+
     st.markdown(
-        '<div class="eyebrow">TU CURADOR MUSICAL CON IA</div>',
+        '<div class="eyebrow">Descubrimiento musical con IA</div>',
         unsafe_allow_html=True,
     )
 
     st.title("¿Qué quieres escuchar?")
+
     st.markdown(
-        '<p class="muted">Describe un sonido, una época, un estado de '
-        'ánimo o una mezcla imposible. Te prepararemos una selección '
-        'que después podrás revisar y guardar en Spotify.</p>',
+        '<p class="muted">Describe un género, una época, un ambiente '
+        'o una mezcla musical. Nosotros preparamos la selección.</p>',
         unsafe_allow_html=True,
     )
 
-    with st.form("playlist_prompt_form"):
-        prompt_value = st.text_area(
-            "Describe tu playlist",
-            value=st.session_state.prompt,
-            key="prompt_input",
-            placeholder=(
-                "Ej.: rock alternativo de los 2000, guitarras potentes, "
-                "melancólico pero enérgico, con canciones poco obvias…"
-            ),
-            height=150,
-            label_visibility="collapsed",
-        )
+    st.markdown('<div class="composer">', unsafe_allow_html=True)
 
-        submitted = st.form_submit_button(
-            "Generar selección  →",
+    st.text_area(
+        "Petición musical",
+        key="prompt_input",
+        height=120,
+        placeholder=(
+            "Ej.: Rock alternativo de los 2000, oscuro y enérgico, "
+            "con clásicos y grupos menos conocidos. Sin baladas."
+        ),
+        label_visibility="collapsed",
+    )
+
+    left, right = st.columns(2, gap="medium")
+
+    with left:
+        if st.button("⚙  Ajustes", key="adjust_button",
+                     use_container_width=True):
+            settings_dialog()
+
+    with right:
+        generate = st.button(
+            "Generar playlist  ↗",
+            key="generate_button",
             type="primary",
             use_container_width=True,
         )
 
-    if submitted:
-        prompt_value = prompt_value.strip()
+    st.markdown(
+        '<p class="muted" style="font-size:12px;margin:12px 2px 0">'
+        'Puedes revisar y editar las canciones antes de exportarlas.</p>',
+        unsafe_allow_html=True,
+    )
 
-        if not prompt_value:
-            st.warning("Describe qué tipo de música quieres escuchar.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if generate:
+        prompt = st.session_state.prompt_input.strip()
+
+        if not prompt:
+            st.warning("Describe qué música quieres escuchar.")
+        elif not GEMINI_API_KEY:
+            st.error("Configura GEMINI_API_KEY en los Secrets.")
         else:
-            st.session_state.prompt = prompt_value
-
             try:
-                with st.spinner("Buscando la combinación adecuada…"):
-                    playlist_name, tracks = generate_playlist(
-                        prompt=prompt_value,
-                        count=int(st.session_state.count),
-                        artist_count=int(st.session_state.artist_count),
-                        creativity=float(st.session_state.temperature),
+                with st.spinner("Creando tu selección musical…"):
+                    tracks = generate_tracks(
+                        prompt,
+                        st.session_state.count,
+                        st.session_state.artist_count,
+                        st.session_state.temperature,
                     )
 
-                st.session_state.playlist_name = playlist_name
                 st.session_state.tracks = tracks
-                st.session_state.resolved = []
-                st.session_state.missing = []
-                st.session_state.review_text = "\n".join(
-                    f'{track["artist"]} - {track["title"]}'
-                    for track in tracks
-                )
-                st.session_state.last_error = ""
                 st.session_state.step = "review"
                 st.rerun()
 
             except Exception as exc:
-                st.error(
-                    "No se pudo generar la selección. "
-                    f"Detalle: {exc}"
-                )
+                st.error(f"No se pudo generar la selección: {exc}")
 
 
-# ============================================================
-# PANTALLA: REVISAR SELECCIÓN
-# ============================================================
+# =========================================================
+# REVISAR CANCIONES
+# =========================================================
 
 elif st.session_state.step == "review":
+    brand()
+
+    st.markdown('<div class="eyebrow">Paso 1 · Revisión</div>',
+                unsafe_allow_html=True)
+    st.title("Tu selección musical")
+
     st.markdown(
-        '<div class="eyebrow">PASO 02 · REVISAR</div>',
+        f'<p class="muted">{len(st.session_state.tracks)} canciones. '
+        'Edita la lista antes de buscarlas en Spotify.</p>',
         unsafe_allow_html=True,
     )
 
-    st.title(st.session_state.playlist_name or "Tu selección")
-    st.markdown(
-        '<p class="muted">Puedes editar la lista antes de buscar las '
-        'canciones en Spotify. Usa una línea por canción con el formato '
-        '<b>Artista - Canción</b>.</p>',
-        unsafe_allow_html=True,
+    st.text_area(
+        "Artista - Canción (una por línea)",
+        value="\n".join(
+            f'{t["artist"]} - {t["title"]}'
+            for t in st.session_state.tracks
+        ),
+        height=330,
+        key="review_text",
     )
 
-    review_value = "\n".join(
-        f'{track["artist"]} - {track["title"]}'
-        for track in st.session_state.tracks
-    )
-
-    edited_text = st.text_area(
-        "Canciones",
-        value=review_value,
-        key="track_review_editor",
-        height=350,
-        label_visibility="collapsed",
-    )
-
-    left, right = st.columns(2)
+    left, right = st.columns(2, gap="medium")
 
     with left:
-        if st.button(
-            "← Volver",
-            key="back_to_create",
-            use_container_width=True,
-        ):
+        if st.button("← Volver", use_container_width=True):
             st.session_state.step = "create"
             st.rerun()
 
     with right:
-        find_clicked = st.button(
-            "Buscar en Spotify  →",
-            key="find_on_spotify",
+        search_clicked = st.button(
+            "Buscar en Spotify  ↗",
             type="primary",
             use_container_width=True,
         )
 
-    if find_clicked:
-        parsed_tracks = []
+    if search_clicked:
+        edited = []
 
-        for line in edited_text.splitlines():
-            line = line.strip()
-
-            if not line:
-                continue
-
-            match = re.match(
+        for line in st.session_state.review_text.splitlines():
+            match = __import__("re").match(
                 r"^\s*(.+?)\s+[–—-]\s+(.+?)\s*$",
                 line,
             )
-
             if match:
-                parsed_tracks.append({
+                edited.append({
                     "artist": match.group(1).strip(),
                     "title": match.group(2).strip(),
                 })
 
-        if not parsed_tracks:
-            st.warning(
-                "No se detectaron canciones. "
-                "Escribe cada una como Artista - Canción."
-            )
+        if not edited:
+            st.warning("Usa el formato Artista - Canción.")
+        elif not spotify_client():
+            st.warning("Conecta Spotify desde la barra lateral.")
         else:
-            st.session_state.tracks = parsed_tracks
-            sp = get_spotify_client()
-
-            if not sp:
-                st.warning(
-                    "Conecta Spotify desde la barra lateral antes "
-                    "de buscar y exportar la playlist."
-                )
-            else:
-                try:
-                    with st.spinner(
-                        "Buscando las canciones en el catálogo de Spotify…"
-                    ):
-                        resolved, missing = find_spotify_tracks(
-                            sp,
-                            parsed_tracks,
-                        )
-
-                    st.session_state.resolved = resolved
-                    st.session_state.missing = missing
-                    st.session_state.step = "export"
-                    st.session_state.last_error = ""
-                    st.rerun()
-
-                except Exception as exc:
-                    st.error(
-                        "No se pudieron buscar las canciones. "
-                        f"Detalle: {exc}"
-                    )
+            found, missing = find_spotify_tracks(spotify_client(), edited)
+            st.session_state.resolved = found
+            st.session_state.missing = missing
+            st.session_state.step = "export"
+            st.rerun()
 
 
-# ============================================================
-# PANTALLA: EXPORTAR
-# ============================================================
+# =========================================================
+# EXPORTAR A SPOTIFY
+# =========================================================
 
 elif st.session_state.step == "export":
-    st.markdown(
-        '<div class="eyebrow">PASO 03 · EXPORTAR</div>',
-        unsafe_allow_html=True,
-    )
+    brand()
 
-    st.title("Tu playlist está casi lista")
+    st.markdown('<div class="eyebrow">Paso 2 · Exportación</div>',
+                unsafe_allow_html=True)
+    st.title("Revisa las coincidencias")
 
     resolved = st.session_state.resolved
     missing = st.session_state.missing
 
-    c1, c2 = st.columns(2)
-    c1.metric("Encontradas", len(resolved))
-    c2.metric("No encontradas", len(missing))
+    st.markdown(
+        f'<p class="muted">{len(resolved)} encontradas · '
+        f'{len(missing)} sin coincidencia.</p>',
+        unsafe_allow_html=True,
+    )
 
-    if resolved:
-        st.markdown("### Canciones que se añadirán")
+    for i, track in enumerate(resolved, 1):
+        title = html.escape(track["title"])
+        artist = html.escape(track["artist"])
+        album = html.escape(track["album"])
+        url = html.escape(track["url"], quote=True)
 
-        for index, track in enumerate(resolved, start=1):
-            st.markdown(
-                f"""
-                <div class="track-row">
-                    <span style="color:#888;display:inline-block;width:30px">
-                        {index:02d}
-                    </span>
-                    <b>{track["spotify_title"]}</b>
-                    <span style="color:#b3b3b3"> ·
-                        {track["spotify_artist"]}
-                    </span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+        st.markdown(
+            f'<div class="track-row">'
+            f'<div class="track-index">{i:02}</div>'
+            f'<div class="track-info">'
+            f'<div class="track-title">{title}</div>'
+            f'<div class="track-artist">{artist}</div>'
+            f'<div class="track-album">{album}</div>'
+            f'</div>'
+            f'<a class="track-link" href="{url}" target="_blank" '
+            f'rel="noopener">Abrir {icon("external", 13)}</a>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
     if missing:
-        with st.expander(
-            f"Canciones no encontradas ({len(missing)})"
-        ):
+        with st.expander(f"Canciones no encontradas ({len(missing)})"):
             for track in missing:
                 st.write(f'{track["artist"]} - {track["title"]}')
 
     st.divider()
 
-    playlist_name = st.text_input(
-        "Nombre de la playlist",
-        value=st.session_state.playlist_name,
-        key="export_playlist_name",
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button(
-            "← Volver a revisar",
-            key="back_to_review",
+    with st.form("export_form"):
+        name = st.text_input(
+            "Nombre de la playlist",
+            value="Mi playlist con pl(ai)lister",
+            max_chars=100,
+        )
+        privacy = st.radio("Privacidad", ["Privada", "Pública"],
+                           horizontal=True)
+        description = st.text_input(
+            "Descripción",
+            value="Creada con pl(ai)lister y Gemini",
+            max_chars=300,
+        )
+        submitted = st.form_submit_button(
+            "Crear playlist en Spotify",
+            type="primary",
             use_container_width=True,
-        ):
+        )
+
+    left, right = st.columns(2, gap="medium")
+
+    with left:
+        if st.button("← Volver", use_container_width=True):
             st.session_state.step = "review"
             st.rerun()
 
-    with col2:
-        export_clicked = st.button(
-            "Crear en Spotify  →",
-            key="create_spotify_playlist",
-            type="primary",
-            use_container_width=True,
-            disabled=not resolved,
-        )
+    with right:
+        if st.button("Cancelar", use_container_width=True):
+            reset_app()
+            st.rerun()
 
-    if export_clicked:
-        sp = get_spotify_client()
+    if submitted:
+        sp = spotify_client()
 
         if not sp:
-            st.error(
-                "La sesión de Spotify ha caducado. "
-                "Vuelve a conectarte desde la barra lateral."
-            )
-        elif not playlist_name.strip():
-            st.warning("Escribe un nombre para la playlist.")
+            st.error("Conecta Spotify antes de exportar.")
+        elif not resolved:
+            st.error("No hay canciones encontradas para exportar.")
+        elif not name.strip():
+            st.error("Escribe un nombre para la playlist.")
         else:
             try:
-                with st.spinner("Creando tu playlist en Spotify…"):
-                    playlist_url = create_spotify_playlist(
-                        sp,
-                        playlist_name.strip(),
-                        resolved,
+                user = sp.current_user()
+                playlist = sp.user_playlist_create(
+                    user=user["id"],
+                    name=name.strip(),
+                    public=(privacy == "Pública"),
+                    description=description.strip(),
+                )
+
+                uris = [track["uri"] for track in resolved]
+                for start in range(0, len(uris), 100):
+                    sp.playlist_add_items(
+                        playlist["id"],
+                        uris[start:start + 100],
                     )
 
-                st.session_state.playlist_name = playlist_name.strip()
+                playlist_url = playlist.get(
+                    "external_urls", {}
+                ).get("spotify", "")
+
+                st.session_state.playlist_name = name.strip()
                 st.session_state.playlist_url = playlist_url
+                st.session_state.history.append({
+                    "id": playlist["id"],
+                    "name": name.strip(),
+                    "url": playlist_url,
+                })
                 st.session_state.step = "success"
-                st.session_state.last_error = ""
                 st.rerun()
 
             except Exception as exc:
-                st.error(
-                    "No se pudo crear la playlist en Spotify. "
-                    f"Detalle: {exc}"
-                )
+                st.error(f"No se pudo crear la playlist: {exc}")
 
 
-# ============================================================
-# PANTALLA: ÉXITO
-# ============================================================
+# =========================================================
+# CONFIRMACIÓN
+# =========================================================
 
 elif st.session_state.step == "success":
+    brand()
+
+    st.markdown('<div class="eyebrow">Completado</div>',
+                unsafe_allow_html=True)
+    st.title("Playlist creada")
+
+    name = html.escape(
+        st.session_state.get("playlist_name", "Tu playlist")
+    )
+
     st.markdown(
-        '<div class="eyebrow">LISTA PARA ESCUCHAR</div>',
+        f'<div class="result-card">'
+        f'<div style="color:#1ED760;margin-bottom:12px">'
+        f'{icon("check", 24)}</div>'
+        f'<div style="font-size:20px;font-weight:600">{name}</div>'
+        f'<p class="muted">Tu selección está lista en Spotify.</p>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
-    st.title("Playlist creada.")
-    st.markdown(
-        f'<p class="muted">{st.session_state.playlist_name}</p>',
-        unsafe_allow_html=True,
-    )
-
-    st.success(
-        f"Se han añadido {len(st.session_state.resolved)} canciones."
-    )
-
-    playlist_url = st.session_state.playlist_url
-
-    if playlist_url:
+    url = st.session_state.get("playlist_url", "")
+    if url:
         st.link_button(
-            "♫  Abrir en Spotify",
-            playlist_url,
+            "Abrir playlist en Spotify  ↗",
+            url,
             type="primary",
             use_container_width=True,
         )
 
-    if st.button(
-        "＋  Crear otra playlist",
-        key="create_another_playlist",
-        use_container_width=True,
-    ):
+    if st.button("＋ Crear otra playlist", use_container_width=True):
         reset_app()
         st.rerun()
