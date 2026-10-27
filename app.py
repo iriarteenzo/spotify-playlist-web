@@ -321,8 +321,7 @@ st.markdown(
 )
 st.markdown(
     '<div class="hero-subtitle">Genera playlists con IA y escuchalas en Spotify'
-    </div>
-""",
+    </div>,
     unsafe_allow_html=True,
 )
 
