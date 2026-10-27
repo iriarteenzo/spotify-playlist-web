@@ -314,14 +314,14 @@ st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
     """
     <div class="hero-title">
-        pl<div class="ai-wave-badge" style="width: 36px; height: 36px; font-size: 16px;">ai</div>lister
+        pl<div class="ai-wave-badge" style="width: 36px; height: 36px; font-size: 20px;">ai</div>lister
     </div>
 """,
     unsafe_allow_html=True,
 )
 st.markdown(
     """
-    '<div class="hero-subtitle">Genera playlists con IA y escuchalas en Spotify'
+    <div class="hero-subtitle">Genera playlists con IA y escuchalas en Spotify'
      </div>
 """,
     unsafe_allow_html=True,
