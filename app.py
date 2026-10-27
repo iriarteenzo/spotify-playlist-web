@@ -39,12 +39,17 @@ if not REDIRECT_URI:
     REDIRECT_URI = "http://localhost:8501"
 
 
-# ---------- Design System & Estilos Dinámicos (Modo Claro / Oscuro / Sistema) ----------
+# ---------- Design System Unificado (Modo Claro / Oscuro / Sistema) ----------
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 
-/* Variables adaptativas basadas en el tema de Streamlit */
+/* Variables CSS adaptativas para Modo Oscuro, Claro y Preferencia de Sistema */
+:root {
+  --green: #1ed760;
+  --green-hover: #1abc54;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #121212;
@@ -74,36 +79,6 @@ st.markdown("""
     --sidebar-bg: #f1f3f5;
   }
 }
-
-/* Soporte explícito para clases de tema de Streamlit si aplica */
-[data-theme="dark"] {
-  --bg: #121212;
-  --panel: #1a1a1a;
-  --panel-sub: #222222;
-  --panel-hover: #2a2a2a;
-  --border: #333333;
-  --border-focus: #555555;
-  --text: rgba(255,255,255,0.92);
-  --muted: rgba(255,255,255,0.60);
-  --input-bg: #181818;
-  --sidebar-bg: #0a0a0a;
-}
-
-[data-theme="light"] {
-  --bg: #f8f9fa;
-  --panel: #ffffff;
-  --panel-sub: #f1f3f5;
-  --panel-hover: #e9ecef;
-  --border: #dee2e6;
-  --border-focus: #adb5bd;
-  --text: #212529;
-  --muted: #6c757d;
-  --input-bg: #ffffff;
-  --sidebar-bg: #f1f3f5;
-}
-
---green: #1ed760;
---green-hover: #1abc54;
 
 .stApp {
   background-color: var(--bg);
@@ -178,7 +153,7 @@ p, label, input, textarea, button {
   font-size: 15px;
 }
 
-/* Shell del Prompt Minimalista */
+/* Prompt Shell Minimalista */
 .st-key-prompt_shell {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -204,7 +179,7 @@ p, label, input, textarea, button {
   box-shadow: 0 0 0 1px var(--green) !important;
 }
 
-/* Botones personalizados */
+/* Sistema de Botones Unificado */
 .stButton > button, .stLinkButton > a {
   min-height: 46px;
   border-radius: 12px;
@@ -244,7 +219,7 @@ section[data-testid="stSidebar"] {
   border-right: 1px solid var(--border);
 }
 
-/* Filas de canciones */
+/* Tarjetas y Filas de Canciones */
 .track-row {
   border-bottom: 1px solid var(--border);
   padding: 14px 4px;
@@ -264,6 +239,7 @@ section[data-testid="stSidebar"] {
 .track-title {
   font-size: 14px;
   font-weight: 600;
+  color: var(--text);
 }
 
 .track-artist, .track-album {
