@@ -395,30 +395,17 @@ def spotify_connect_button():
 
 
 # =========================================================
-# GENERACIÓN MULTI-LLM Y PUTER (FRONTEND JS BRIDGE)
+# GENERACIÓN CON PUTER.COM (GRATIS SIN CRÉDITOS) Y FALLBACK
 # =========================================================
 
-def _call_gemini(instructions, prompt, temperature):
-    if not GEMINI_API_KEY:
-        raise ValueError("Sin GEMINI_API_KEY")
-    client = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
-        config=types.GenerateContentConfig(
-            temperature=temperature,
-            response_mime_type="application/json",
-        ),
+def _call_puter(instructions, prompt, temperature):
+    """Usa el servicio gratuito de Puter.com sin necesidad de tarjeta ni créditos."""
+    client = OpenAI(
+        base_url="https://api.puter.com/v1",
+        api_key="puter_free_session"  # Puter gestiona el acceso mediante la sesión web
     )
-    return response.text
-
-
-def _call_openai(instructions, prompt, temperature):
-    if not OPENAI_API_KEY:
-        raise ValueError("Sin OPENAI_API_KEY")
-    client = OpenAI(api_key=OPENAI_API_KEY)
     response = client.chat.completions.create(
-        model=OPENAI_MODEL,
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": instructions},
             {"role": "user", "content": prompt}
@@ -429,52 +416,30 @@ def _call_openai(instructions, prompt, temperature):
     return response.choices[0].message.content
 
 
-def _call_puter_via_js(instructions, prompt):
-    """Ejecuta puter.ai.chat en un componente web headless seguro."""
-    full_prompt = f"{instructions}\n\nPetición del usuario:\n{prompt}"
-    js_code = f"""
-    <!DOCTYPE html>
-    <html>
-    <head><script src="https://js.puter.com/v2/"></script></head>
-    <body>
-    <script>
-    async function runPuter() {{
-        try {{
-            const res = await puter.ai.chat({json.dumps(full_prompt)});
-            const text = typeof res === 'string' ? res : (res.message?.content || JSON.stringify(res));
-            window.parent.postMessage({{type: 'puter_result', data: text}}, '*');
-        }} catch (err) {{
-            window.parent.postMessage({{type: 'puter_error', data: err.toString()}}, '*');
-        }}
-    }}
-    runPuter();
-    </script>
-    </body>
-    </html>
-    """
-    # Nota: El puente por JS se puede invocar o estructurar como fallback nativo.
-    # Para simplificar la ejecución síncrona en Streamlit, usamos st.components.v1
-    return None
-
-
 def generate_tracks(prompt, count, artist_count, temperature):
     provider_preference = st.session_state.get("ai_provider", "Automático (Fallback)")
 
     instructions = f"""
 Actúa como curador musical experto.
+
 Devuelve únicamente JSON válido con esta estructura:
 {{"tracks":[{{"artist":"artista","title":"canción"}}]}}
-Genera {count} canciones reales y distintas de aproximadamente {artist_count} artistas diferentes.
-Respeta el género, época, ambiente y exclusiones del usuario. No inventes canciones.
+
+Genera {count} canciones reales y distintas de aproximadamente
+{artist_count} artistas diferentes.
+
+Respeta el género, época, idioma, ambiente, referencias y exclusiones
+del usuario. No inventes canciones. Evita duplicados.
+No incluyas explicaciones ni Markdown.
 """
 
-    pipeline = []
-    if provider_preference == "Gemini":
-        pipeline = [("Gemini", _call_gemini), ("OpenAI", _call_openai)]
-    elif provider_preference == "OpenAI":
-        pipeline = [("OpenAI", _call_openai), ("Gemini", _call_gemini)]
-    else:
-        pipeline = [("Gemini", _call_gemini), ("OpenAI", _call_openai)]
+    # Si prefieres usar Puter directamente, lo ponemos al inicio del pipeline
+    if provider_preference == "Puter.com":
+        pipeline = [("Puter.com", _call_puter), ("Gemini", _call_gemini)]
+    elif provider_preference == "Gemini":
+        pipeline = [("Gemini", _call_gemini), ("Puter.com", _call_puter)]
+    else:  # Modo automático: prioriza Puter primero para evitar los errores de pago de OpenAI y saturación de Gemini
+        pipeline = [("Puter.com", _call_puter), ("Gemini", _call_gemini)]
 
     response_text = None
     last_errors = []
@@ -483,13 +448,14 @@ Respeta el género, época, ambiente y exclusiones del usuario. No inventes canc
         try:
             response_text = func(instructions, prompt, temperature)
             if response_text:
+                st.toast(f"Generado con éxito usando {name}", icon="✨")
                 break
         except Exception as err:
             last_errors.append(f"{name}: {err}")
             continue
 
     if not response_text:
-        raise ValueError("Todos los proveedores automáticos fallaron. Detalle: " + " | ".join(last_errors))
+        raise ValueError("Todos los proveedores fallaron. Detalle:\n" + " | ".join(last_errors))
 
     try:
         data = json.loads(response_text or "")
@@ -502,6 +468,7 @@ Respeta el género, época, ambiente y exclusiones del usuario. No inventes canc
     for item in data.get("tracks", []):
         if not isinstance(item, dict):
             continue
+
         artist = str(item.get("artist", "")).strip()
         title = str(item.get("title", "")).strip()
         key = (artist.casefold(), title.casefold())
@@ -514,11 +481,13 @@ Respeta el género, época, ambiente y exclusiones del usuario. No inventes canc
             break
 
     if len(tracks) < count:
-        raise ValueError(f"Solo se recibieron {len(tracks)} canciones válidas de las {count} solicitadas.")
+        raise ValueError(
+            f"Solo se recibieron {len(tracks)} canciones válidas "
+            f"de las {count} solicitadas. Prueba otra petición."
+        )
 
     return tracks
-
-
+    
 # =========================================================
 # BÚSQUEDA DE SPOTIFY Y ESTADO
 # =========================================================
@@ -586,7 +555,11 @@ def reset_app():
 @st.dialog("Ajustes de generación", width="small")
 def settings_dialog():
     st.markdown('<p class="muted">Personaliza la selección musical y el motor de IA.</p>', unsafe_allow_html=True)
-    st.selectbox("Proveedor preferido", options=["Automático (Fallback)", "Gemini", "OpenAI"], key="ai_provider")
+st.selectbox(
+        "Proveedor preferido",
+        options=["Automático (Fallback)", "Puter.com", "Gemini"],
+        key="ai_provider",
+    )
     st.slider("Cantidad de canciones", 5, 50, key="count")
     st.slider("Cantidad de artistas", 1, 15, key="artist_count")
     st.markdown("**Creatividad**")
