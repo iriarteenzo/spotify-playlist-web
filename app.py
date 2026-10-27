@@ -839,7 +839,8 @@ if st.session_state.step == "create":
         unsafe_allow_html=True,
     )
 
-        with st.container(key="prompt_shell"):
+    with
+st.container(key="prompt_shell"):
         st.text_area(
             "Tu petición",
             key="prompt",
