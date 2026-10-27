@@ -44,51 +44,73 @@ if not REDIRECT_URI:
 # ---------- Estilos ----------
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 
-:root { color-scheme: dark; }
+:root {
+  color-scheme: dark;
+  --bg: #121212;
+  --panel: #202020;
+  --panel-hover: #2a2a2a;
+  --border: #3a3a3a;
+  --text: rgba(255,255,255,.90);
+  --muted: rgba(255,255,255,.62);
+  --green: #1ed760;
+}
 
 .stApp {
-  background: #121212;
-  color: #f5f5f5;
-  font-family: 'Google Sans', Inter, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Google Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
 }
 
 .block-container {
   max-width: 760px;
-  padding: 2rem 1.15rem 3rem;
+  padding: 28px 28px 36px;
 }
 
 header[data-testid="stHeader"] {
   background: transparent;
 }
 
-section[data-testid="stSidebar"] {
-  background: #090909;
-  border-right: 1px solid #292929;
-}
-
-h1, h2, h3, p, label {
-  font-family: 'Google Sans', Inter, sans-serif;
+h1, h2, h3 {
+  font-family: 'DM Serif Display', Georgia, serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -.35px;
+  line-height: 1.15;
 }
 
 h1 {
-  letter-spacing: -1.6px;
-  font-size: clamp(2rem, 7vw, 3rem);
+  font-size: clamp(2.25rem, 5vw, 3.1rem) !important;
+  margin-bottom: 14px !important;
 }
 
 h2 {
-  letter-spacing: -.5px;
+  font-size: 2rem !important;
+}
+
+h3 {
+  font-size: 1.35rem !important;
+}
+
+p, label, input, textarea, button {
+  font-family: 'Google Sans', sans-serif;
+}
+
+p {
+  font-size: 15px;
+  line-height: 1.65;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 3px;
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -1.7px;
-  margin-bottom: 1.4rem;
+  gap: 4px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  margin-bottom: 28px;
   color: #fff;
 }
 
@@ -98,163 +120,259 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #1ed760;
+  border: 2px solid var(--green);
   border-radius: 50%;
-  color: #1ed760;
+  color: var(--green);
   font-size: 12px;
   letter-spacing: -.4px;
 }
 
 .eyebrow {
-  color: #1ed760;
-  font-size: .76rem;
+  color: var(--green);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1.4px;
+  letter-spacing: 1.8px;
   font-weight: 700;
+  margin-bottom: 12px;
 }
 
 .muted {
-  color: #a7a7a7;
+  color: var(--muted);
+  font-size: 15px;
 }
 
 .st-key-prompt_shell {
-  background: #1e1e1e;
-  border: 1px solid #343434;
-  border-radius: 22px;
-  padding: 12px 14px 10px;
-  margin-top: 1.2rem;
-  margin-bottom: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 18px 20px 16px;
+  margin-top: 28px;
+  margin-bottom: 18px;
+  gap: 14px;
 }
 
-.st-key-prompt_shell div[data-testid="stTextArea"] textarea {
-  background: transparent !important;
+.st-key-prompt_shell textarea {
+  min-height: 150px !important;
+  padding: 18px 16px !important;
+  background: #191919 !important;
+  border: 1px solid #363636 !important;
+  border-radius: 16px !important;
+  color: #fff !important;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  resize: none !important;
+}
+
+.st-key-prompt_shell textarea::placeholder {
+  color: rgba(255,255,255,.48) !important;
+  opacity: 1;
 }
 
 .st-key-prompt_shell div[data-testid="stHorizontalBlock"] {
-  align-items: center;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.st-key-prompt_shell div[data-testid="stColumn"] {
+  min-width: 0;
+}
+
+.st-key-prompt_shell div[data-testid="stButton"] {
+  width: 100%;
 }
 
 .st-key-prompt_shell div[data-testid="stButton"] button {
-  min-height: 38px;
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-div[data-testid="stTextArea"] textarea {
-  background: #1e1e1e !important;
-  color: #f5f5f5 !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  border-radius: 14px !important;
-  padding: 8px 4px !important;
-  font-size: 1rem !important;
-  resize: vertical !important;
-}
-
-div[data-testid="stTextArea"] label {
-  display: none;
-}
-
-div[data-testid="stTextArea"] [data-baseweb="textarea"] {
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.stButton > button {
-  min-height: 42px;
-  border-radius: 999px;
-  border: 1px solid #414141;
+.stButton > button,
+.stLinkButton > a {
+  min-height: 46px;
+  border-radius: 14px;
+  border: 1px solid #424242;
   background: #292929;
-  color: #f5f5f5;
-  font-weight: 500;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 18px;
+  transition: background .15s ease, border-color .15s ease;
 }
 
-.stButton > button:hover {
-  border-color: #777;
+.stButton > button:hover,
+.stLinkButton > a:hover {
+  border-color: #707070;
+  background: var(--panel-hover);
   color: #fff;
-  background: #333;
 }
 
 .stButton > button[kind="primary"] {
-  background: #1ed760 !important;
-  border-color: #1ed760 !important;
+  background: var(--green) !important;
+  border-color: var(--green) !important;
   color: #07150b !important;
-  font-weight: 750 !important;
+  font-weight: 700 !important;
 }
 
 .stButton > button[kind="primary"]:hover {
-  background: #3be477 !important;
+  background: #43e477 !important;
+  border-color: #43e477 !important;
 }
 
-div[data-testid="stSlider"] [data-baseweb="slider"] div[role="slider"] {
-  background: #1ed760;
+div[data-testid="stPopover"] > button {
+  width: 100%;
+  min-height: 48px;
+}
+
+div[data-testid="stPopoverBody"] {
+  background: #202020;
+  border: 1px solid #404040;
+  border-radius: 18px;
+  padding: 24px;
+  min-width: 310px;
+}
+
+div[data-testid="stSlider"] {
+  padding: 10px 2px 14px;
+}
+
+div[data-testid="stSlider"] [role="slider"] {
+  background: var(--green) !important;
+  border-color: var(--green) !important;
 }
 
 div[data-testid="stSlider"] [data-testid="stTickBar"] {
-  background: #1ed760;
+  background: var(--green);
+}
+
+section[data-testid="stSidebar"] {
+  background: #080808;
+  border-right: 1px solid #303030;
+}
+
+section[data-testid="stSidebar"] * {
+  color: rgba(255,255,255,.90);
+}
+
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+  color: rgba(255,255,255,.65);
+}
+
+section[data-testid="stSidebar"] hr {
+  border-color: #343434;
+  margin: 22px 0;
+}
+
+div[data-testid="stTextInput"] input {
+  min-height: 46px;
+  padding: 12px 14px;
+  background: #1d1d1d;
+  border: 1px solid #414141;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 15px;
+}
+
+div[data-testid="stTextArea"] textarea {
+  background: #1d1d1d;
+  color: #fff;
+  border: 1px solid #414141;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 div[data-testid="stExpander"] {
-  border: 1px solid #333;
+  border: 1px solid #383838;
   border-radius: 14px;
 }
 
 .track-row {
-  border-bottom: 1px solid #2b2b2b;
-  padding: 12px 0;
+  border-bottom: 1px solid #303030;
+  padding: 16px 4px;
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
 }
 
 .track-index {
-  color: #888;
-  width: 24px;
+  color: var(--muted);
+  width: 26px;
   flex-shrink: 0;
-  font-size: .85rem;
+  font-size: 13px;
 }
 
 .track-title {
-  color: #f5f5f5;
-  font-size: .96rem;
+  color: #fff;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .track-artist {
-  color: #aaa;
-  font-size: .84rem;
-  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
 }
 
 .track-album {
-  color: #777;
-  font-size: .78rem;
-  margin-top: 2px;
+  color: rgba(255,255,255,.48);
+  font-size: 12px;
+  margin-top: 3px;
 }
 
 .track-link {
-  color: #1ed760;
+  color: var(--green);
   text-decoration: none;
-  font-size: .8rem;
+  font-size: 13px;
   white-space: nowrap;
 }
 
 .result-card {
   background: #1b1b1b;
-  border: 1px solid #303030;
-  border-radius: 16px;
-  padding: 16px;
-  margin: 12px 0;
+  border: 1px solid #353535;
+  border-radius: 18px;
+  padding: 24px;
+  margin: 18px 0;
 }
 
 div[data-testid="stAlert"] {
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 hr {
   border-color: #303030;
+  margin: 28px 0;
 }
 
-small {
-  color: #888;
+/* Sin desplazamiento en la pantalla de creación de playlist.
+   Las pantallas de revisión conservan el scroll cuando es necesario. */
+body:has(.st-key-prompt_shell) .main .block-container {
+  padding-bottom: 18px;
+}
+
+@media (max-width: 640px) {
+  .block-container {
+    padding: 20px 16px 28px;
+  }
+
+  .st-key-prompt_shell {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .st-key-prompt_shell textarea {
+    min-height: 130px !important;
+    padding: 14px !important;
+  }
+
+  h1 {
+    font-size: 2.25rem !important;
+  }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -349,11 +467,47 @@ def connect_spotify():
         state = secrets.token_urlsafe(24)
         st.session_state.oauth_state = state
 
-    st.link_button(
-        "Conectar con Spotify",
-        oauth.get_authorize_url(state=state),
-        use_container_width=True,
-    )
+    spotify_url = oauth.get_authorize_url(state=state)
+
+st.markdown(
+    f"""
+    <a href="{html.escape(spotify_url, quote=True)}"
+       target="_self"
+       style="
+         display:flex;
+         align-items:center;
+         justify-content:center;
+         gap:12px;
+         width:100%;
+         min-height:48px;
+         box-sizing:border-box;
+         padding:12px 16px;
+         border-radius:14px;
+         background:#1ed760;
+         color:#07150b;
+         font-family:'Google Sans',sans-serif;
+         font-size:14px;
+         font-weight:700;
+         text-decoration:none;
+       ">
+      <svg width="24" height="24" viewBox="0 0 24 24"
+           aria-hidden="true" style="flex-shrink:0">
+        <circle cx="12" cy="12" r="12" fill="#07150b"/>
+        <path d="M5.4 9.2c4.5-1.4 9.6-.9 13.1 1.3"
+              fill="none" stroke="#1ed760" stroke-width="1.8"
+              stroke-linecap="round"/>
+        <path d="M6.2 12.2c3.7-1.1 8-.7 11.2 1.1"
+              fill="none" stroke="#1ed760" stroke-width="1.6"
+              stroke-linecap="round"/>
+        <path d="M7 15c3-.8 6.2-.4 8.9 1"
+              fill="none" stroke="#1ed760" stroke-width="1.5"
+              stroke-linecap="round"/>
+      </svg>
+      Conectar con Spotify
+    </a>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 # ---------- Procesamiento de canciones ----------
@@ -688,72 +842,87 @@ if st.session_state.step == "create":
     )
 
     with st.container(key="prompt_shell"):
-        st.text_area(
-            "Tu petición",
-            key="prompt",
-            height=112,
-            placeholder=(
-                "Ej.: Rock alternativo de los 2000, oscuro y "
-                "enérgico, con grupos menos conocidos y algunos "
-                "clásicos. Sin baladas."
-            ),
-            label_visibility="collapsed",
-        )
+    st.text_area(
+        "Tu petición",
+        key="prompt",
+        height=150,
+        placeholder=(
+            "Describe el sonido que buscas...\n\n"
+            "Ej.: Rock alternativo de los 2000, oscuro y enérgico, "
+            "con clásicos y grupos menos conocidos. Sin baladas."
+        ),
+        label_visibility="collapsed",
+    )
 
-        left, right = st.columns(
-            [1, 1],
-            vertical_alignment="center",
-        )
+    col_settings, col_generate = st.columns(
+        2,
+        gap="small",
+    )
 
-        with left:
-            if st.button(
-                "⚙  Ajustes",
-                key="toggle_settings",
-            ):
-                st.session_state.show_settings = (
-                    not st.session_state.show_settings
-                )
-                st.rerun()
-
-        with right:
-            generate = st.button(
-                "Generar  ↗",
-                key="generate",
-                type="primary",
-                use_container_width=True,
+    with col_settings:
+        with st.popover(
+            "⚙  Ajustes",
+            use_container_width=True,
+        ):
+            st.markdown("### Ajustes de generación")
+            st.caption(
+                "Personaliza el tamaño y la diversidad de tu playlist."
             )
-
-    if st.session_state.show_settings:
-        with st.container(border=True):
-            st.markdown("**Ajustes de generación**")
 
             st.slider(
                 "Cantidad de canciones",
-                5,
-                50,
+                min_value=5,
+                max_value=50,
                 key="count",
             )
 
             st.slider(
                 "Cantidad de artistas",
-                1,
-                15,
+                min_value=1,
+                max_value=15,
                 key="artist_count",
+            )
+
+            st.markdown("**Creatividad**")
+            st.caption(
+                "BAJA: prioriza resultados previsibles.\n\n"
+                "ALTA: permite mezclas más inesperadas."
             )
 
             st.slider(
                 "Creatividad",
-                0.0,
-                1.0,
+                min_value=0.0,
+                max_value=1.0,
                 step=0.1,
                 key="temperature",
+                label_visibility="collapsed",
             )
 
-            st.caption(
-                "Una creatividad baja prioriza resultados "
-                "previsibles; una alta permite mezclas más "
-                "inesperadas."
+            st.markdown(
+                """
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    margin-top:-8px;
+                    color:rgba(255,255,255,.72);
+                    font-size:11px;
+                    font-weight:700;
+                    letter-spacing:1px;
+                ">
+                    <span>BAJA</span>
+                    <span>ALTA</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
+
+    with col_generate:
+        generate = st.button(
+            "Generar  ↗",
+            key="generate",
+            type="primary",
+            use_container_width=True,
+        )
 
     if generate:
         if not st.session_state.prompt.strip():
