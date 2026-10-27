@@ -54,12 +54,11 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 
-/* --- DESIGN SYSTEM: Variables de Color (Sistema, Oscuro y Claro) --- */
-:root {
-  --green: #1ed760;
-  --green-hover: #1abc54;
-}
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 
+/* --- 1. DESIGN SYSTEM: VARIABLES DINÁMICAS (DARK/LIGHT) --- */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #121212;
@@ -68,8 +67,8 @@ st.markdown("""
     --panel-hover: #2a2a2a;
     --border: #333333;
     --border-focus: #555555;
-    --text: rgba(255,255,255,0.92);
-    --muted: rgba(255,255,255,0.60);
+    --text: rgba(255, 255, 255, 0.92);
+    --muted: rgba(255, 255, 255, 0.60);
     --input-bg: #181818;
     --sidebar-bg: #0a0a0a;
   }
@@ -90,19 +89,12 @@ st.markdown("""
   }
 }
 
-[data-theme="dark"] {
-  --bg: #121212; --panel: #1a1a1a; --panel-sub: #222222; --panel-hover: #2a2a2a;
-  --border: #333333; --border-focus: #555555; --text: rgba(255,255,255,0.92);
-  --muted: rgba(255,255,255,0.60); --input-bg: #181818; --sidebar-bg: #0a0a0a;
+:root {
+  --green: #1ed760;
+  --green-hover: #1abc54;
 }
 
-[data-theme="light"] {
-  --bg: #f8f9fa; --panel: #ffffff; --panel-sub: #f1f3f5; --panel-hover: #e9ecef;
-  --border: #dee2e6; --border-focus: #adb5bd; --text: #212529;
-  --muted: #6c757d; --input-bg: #ffffff; --sidebar-bg: #f1f3f5;
-}
-
-/* --- Estructura Global y Tipografía --- */
+/* --- 2. TIPOGRAFÍA Y CONTENEDOR GENERAL --- */
 .stApp {
   background-color: var(--bg);
   color: var(--text);
@@ -116,7 +108,9 @@ st.markdown("""
   padding: 32px 20px 48px;
 }
 
-header[data-testid="stHeader"] { background: transparent; }
+header[data-testid="stHeader"] {
+  background: transparent;
+}
 
 h1, h2, h3 {
   font-family: 'DM Serif Display', Georgia, serif !important;
@@ -136,7 +130,7 @@ p, label, input, textarea, button {
   color: var(--text);
 }
 
-/* --- Logotipo Adaptativo --- */
+/* --- 3. LOGOTIPO ADAPTATIVO --- */
 .brand {
   display: flex;
   align-items: center;
@@ -175,31 +169,31 @@ p, label, input, textarea, button {
   font-size: 15px;
 }
 
-/* --- Componentes: Prompt Shell e Inputs --- */
+/* --- 4. COMPONENTES: SHELL Y FORMULARIOS --- */
 .st-key-prompt_shell {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 16px;
-  margin: 24px 0 16px;
+  margin-top: 24px;
+  margin-bottom: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
 }
 
-.st-key-prompt_shell textarea {
-  min-height: 140px !important;
+.st-key-prompt_shell textarea, div[data-testid="stTextInput"] input {
   background: var(--input-bg) !important;
   border: 1px solid var(--border) !important;
   border-radius: 12px !important;
   color: var(--text) !important;
-  padding: 14px !important;
+  font-size: 15px !important;
 }
 
-.st-key-prompt_shell textarea:focus {
+.st-key-prompt_shell textarea:focus, div[data-testid="stTextInput"] input:focus {
   border-color: var(--green) !important;
   box-shadow: 0 0 0 1px var(--green) !important;
 }
 
-/* --- Botones --- */
+/* --- 5. BOTONES Y VARIANTES --- */
 .stButton > button, .stLinkButton > a {
   min-height: 46px;
   border-radius: 12px;
@@ -219,6 +213,7 @@ p, label, input, textarea, button {
 .stButton > button:hover, .stLinkButton > a:hover {
   border-color: var(--border-focus);
   background: var(--panel-hover);
+  color: var(--text);
 }
 
 .stButton > button[kind="primary"] {
@@ -233,7 +228,7 @@ p, label, input, textarea, button {
   border-color: var(--green-hover) !important;
 }
 
-/* --- Barra Lateral y Filas de Listas --- */
+/* --- 6. SIDEBAR Y ELEMENTOS DE LISTA --- */
 section[data-testid="stSidebar"] {
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
@@ -258,6 +253,7 @@ section[data-testid="stSidebar"] {
 .track-title {
   font-size: 14px;
   font-weight: 600;
+  color: var(--text);
 }
 
 .track-artist, .track-album {
@@ -273,9 +269,14 @@ section[data-testid="stSidebar"] {
   margin: 16px 0;
 }
 
+/* --- 7. RESPONSIVIDAD MÓVIL --- */
 @media (max-width: 640px) {
-  .block-container { padding: 16px 12px 32px; }
-  h1 { font-size: 2rem !important; }
+  .block-container {
+    padding: 16px 12px 32px;
+  }
+  h1 {
+    font-size: 2rem !important;
+  }
 }
 </style>
 """, unsafe_allow_html=True)
