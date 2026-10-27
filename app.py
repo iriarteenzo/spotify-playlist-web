@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
 DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
 SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private"
 
@@ -568,11 +568,15 @@ def spotify_connect_button():
 
 
 # =========================================================
-# GENERACIÓN DE CANCIONES (MULTI-LLM: GEMINI / OPENAI / PUTER)
+# GENERACIÓN DE CANCIONES CON FALLBACK AUTOMÁTICO
 # =========================================================
 
 def generate_tracks(prompt, count, artist_count, temperature):
-    provider = st.session_state.get("ai_provider", "Gemini")
+    selected_provider = st.session_state.get("ai_provider", "Gemini")
+    
+    # Orden de prueba: primero el seleccionado por el usuario, luego las alternativas
+    all_providers = ["Gemini", "OpenAI", "Puter (OpenAI Gratis)"]
+    providers_to_try = [selected_provider] + [p for p in all_providers if p != selected_provider]
 
     instructions = f"""
 Actúa como curador musical experto.
@@ -588,88 +592,90 @@ del usuario. No inventes canciones. Evita duplicados.
 No incluyas explicaciones ni Markdown.
 """
 
-    response_text = ""
+    last_error = None
 
-    if provider == "Gemini":
-        if not GEMINI_API_KEY:
-            raise ValueError("Falta GEMINI_API_KEY en los Secrets.")
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
-            config=types.GenerateContentConfig(
-                temperature=temperature,
-                response_mime_type="application/json",
-            ),
-        )
-        response_text = response.text
+    for provider in providers_to_try:
+        try:
+            response_text = ""
 
-    elif provider == "OpenAI":
-        if not OPENAI_API_KEY:
-            raise ValueError("Falta OPENAI_API_KEY en los Secrets.")
-        client = OpenAI(api_key=OPENAI_API_KEY)
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": instructions},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=temperature,
-            response_format={"type": "json_object"}
-        )
-        response_text = response.choices[0].message.content
+            if provider == "Gemini":
+                if not GEMINI_API_KEY:
+                    continue
+                client = genai.Client(api_key=GEMINI_API_KEY)
+                response = client.models.generate_content(
+                    model=GEMINI_MODEL,
+                    contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
+                    config=types.GenerateContentConfig(
+                        temperature=temperature,
+                        response_mime_type="application/json",
+                    ),
+                )
+                response_text = response.text
 
-    elif provider == "Puter (OpenAI Gratis)":
-        if not PUTER_API_KEY:
-            raise ValueError("Falta PUTER_API_KEY en los Secrets.")
-        client = OpenAI(
-            base_url="https://api.puter.com/v1",
-            api_key=PUTER_API_KEY,
-        )
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": instructions},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=temperature,
-        )
-        response_text = response.choices[0].message.content
+            elif provider == "OpenAI":
+                if not OPENAI_API_KEY:
+                    continue
+                client = OpenAI(api_key=OPENAI_API_KEY)
+                response = client.chat.completions.create(
+                    model=OPENAI_MODEL,
+                    messages=[
+                        {"role": "system", "content": instructions},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=temperature,
+                    response_format={"type": "json_object"}
+                )
+                response_text = response.choices[0].message.content
 
-    # Limpieza básica por si el modelo devuelve markdown ```json ... ```
-    if response_text.startswith("```"):
-        response_text = response_text.strip("`").removeprefix("json").strip()
+            elif provider == "Puter (OpenAI Gratis)":
+                if not PUTER_API_KEY:
+                    continue
+                client = OpenAI(
+                    base_url="https://api.puter.com/v1",
+                    api_key=PUTER_API_KEY,
+                )
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": instructions},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=temperature,
+                )
+                response_text = response.choices[0].message.content
 
-    try:
-        data = json.loads(response_text or "")
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"{provider} devolvió una respuesta JSON no válida.") from exc
+            if response_text.startswith("```"):
+                response_text = response_text.strip("`").removeprefix("json").strip()
 
-    tracks = []
-    seen = set()
+            data = json.loads(response_text or "")
+            tracks = []
+            seen = set()
 
-    for item in data.get("tracks", []):
-        if not isinstance(item, dict):
+            for item in data.get("tracks", []):
+                if not isinstance(item, dict):
+                    continue
+
+                artist = str(item.get("artist", "")).strip()
+                title = str(item.get("title", "")).strip()
+                key = (artist.casefold(), title.casefold())
+
+                if artist and title and key not in seen:
+                    tracks.append({"artist": artist, "title": title})
+                    seen.add(key)
+
+                if len(tracks) == count:
+                    break
+
+            if len(tracks) >= count // 2:
+                if provider != selected_provider:
+                    st.toast(f"El proveedor {selected_provider} falló. Se completó con {provider}.", icon="🔄")
+                return tracks
+
+        except Exception as exc:
+            last_error = exc
             continue
 
-        artist = str(item.get("artist", "")).strip()
-        title = str(item.get("title", "")).strip()
-        key = (artist.casefold(), title.casefold())
-
-        if artist and title and key not in seen:
-            tracks.append({"artist": artist, "title": title})
-            seen.add(key)
-
-        if len(tracks) == count:
-            break
-
-    if len(tracks) < count:
-        raise ValueError(
-            f"Solo se recibieron {len(tracks)} canciones válidas "
-            f"de las {count} solicitadas. Prueba otra petición."
-        )
-
-    return tracks
+    raise ValueError(f"Todos los proveedores de IA fallaron. Último error: {last_error}")
 
 
 # =========================================================
@@ -774,7 +780,7 @@ def settings_dialog():
     )
 
     st.selectbox(
-        "Proveedor de IA",
+        "Proveedor preferido de IA",
         options=["Gemini", "OpenAI", "Puter (OpenAI Gratis)"],
         key="ai_provider",
     )
@@ -891,13 +897,8 @@ with st.sidebar:
     else:
         spotify_connect_button()
 
-    provider = st.session_state.get("ai_provider", "Gemini")
-    if provider == "Gemini" and not GEMINI_API_KEY:
-        st.warning("Falta GEMINI_API_KEY en Secrets.")
-    elif provider == "OpenAI" and not OPENAI_API_KEY:
-        st.warning("Falta OPENAI_API_KEY en Secrets.")
-    elif provider == "Puter (OpenAI Gratis)" and not PUTER_API_KEY:
-        st.warning("Falta PUTER_API_KEY en Secrets.")
+    if not GEMINI_API_KEY and not OPENAI_API_KEY and not PUTER_API_KEY:
+        st.warning("Configura al menos una API Key en Secrets.")
 
 
 # =========================================================
@@ -950,7 +951,8 @@ if st.session_state.step == "create":
 
     st.markdown(
         '<p class="muted" style="font-size:12px;margin:12px 2px 0">'
-        'Puedes revisar y editar las canciones antes de exportarlas.</p>',
+        'Puedes detener la generación en cualquier momento usando el botón Stop (■) '
+        'de la esquina superior derecha.</p>',
         unsafe_allow_html=True,
     )
 
@@ -958,19 +960,14 @@ if st.session_state.step == "create":
 
     if generate:
         prompt = st.session_state.prompt_input.strip()
-        provider = st.session_state.get("ai_provider", "Gemini")
 
         if not prompt:
             st.warning("Describe qué música quieres escuchar.")
-        elif provider == "Gemini" and not GEMINI_API_KEY:
-            st.error("Configura GEMINI_API_KEY en los Secrets.")
-        elif provider == "OpenAI" and not OPENAI_API_KEY:
-            st.error("Configura OPENAI_API_KEY en los Secrets.")
-        elif provider == "Puter (OpenAI Gratis)" and not PUTER_API_KEY:
-            st.error("Configura PUTER_API_KEY en los Secrets.")
+        elif not GEMINI_API_KEY and not OPENAI_API_KEY and not PUTER_API_KEY:
+            st.error("Configura al menos una API Key en los Secrets.")
         else:
             try:
-                with st.spinner(f"Creando tu selección musical con {provider}…"):
+                with st.spinner("Creando tu selección musical…"):
                     tracks = generate_tracks(
                         prompt,
                         st.session_state.count,
