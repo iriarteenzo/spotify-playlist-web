@@ -50,7 +50,7 @@ st.markdown(
     .logo-container {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 4px;
         font-size: 32px;
         font-weight: 800;
         letter-spacing: -0.5px;
@@ -64,9 +64,9 @@ st.markdown(
         justify-content: center;
         border: 2px solid #1DB954;
         border-radius: 50%;
-        width: 38px;
-        height: 38px;
-        font-size: 20px;
+        width: 42px;
+        height: 42px;
+        font-size: 24px;
         color: #1DB954;
         font-weight: 900;
         background-color: rgba(29, 185, 84, 0.1);
