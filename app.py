@@ -12,7 +12,7 @@ from google.genai import types
 
 # ---------- Configuración ----------
 st.set_page_config(
-    page_title="pl(ai)lister",
+    page_title="pl(ai)list",
     page_icon="♪",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -1086,7 +1086,7 @@ elif st.session_state.step == "export":
     with st.form("export_form"):
         playlist_name = st.text_input(
             "Nombre de la playlist",
-            value="Mi playlist con pl(ai)lister",
+            value="Mi playlist con pl(ai)list",
             max_chars=100,
         )
 
@@ -1098,7 +1098,7 @@ elif st.session_state.step == "export":
 
         description = st.text_input(
             "Descripción (opcional)",
-            value="Creada con pl(ai)lister y Gemini",
+            value="Creada con pl(ai)list y Gemini",
             max_chars=300,
         )
 
@@ -1143,7 +1143,7 @@ elif st.session_state.step == "export":
                     user=me["id"],
                     name=(
                         playlist_name.strip()
-                        or "Mi playlist con pl(ai)lister"
+                        or "Mi playlist con pl(ai)list"
                     ),
                     public=(privacy == "Pública"),
                     description=description.strip(),
@@ -1233,6 +1233,6 @@ st.markdown("<hr>", unsafe_allow_html=True)
 
 st.markdown(
     '<p style="text-align:center;color:#777;font-size:.78rem">'
-    'pl(ai)lister · Descubre música a tu manera</p>',
+    'pl(ai)list · Descubre música a tu manera</p>',
     unsafe_allow_html=True,
 )
