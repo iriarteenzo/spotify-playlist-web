@@ -64,8 +64,8 @@ st.markdown(
         justify-content: center;
         border: 2px solid #1DB954;
         border-radius: 50%;
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
         font-size: 24px;
         color: #1DB954;
         font-weight: 900;
@@ -79,7 +79,7 @@ st.markdown(
         text-align: left;
     }
     .hero-title {
-        font-size: 40px;
+        font-size: 42px;
         font-weight: 800;
         color: #FFFFFF;
         letter-spacing: -1px;
@@ -92,7 +92,7 @@ st.markdown(
         font-size: 20px;
         color: #1DB954;
         font-weight: 600;
-        margin-bottom: 24px;
+        margin-bottom: 12px;
     }
 
     /* Tarjetas estáticas visibles */
@@ -104,13 +104,13 @@ st.markdown(
         margin-bottom: 12px;
     }
     .feature-title {
-        font-size: 15px;
+        font-size: 24px;
         font-weight: 700;
         color: #FFFFFF;
         margin-bottom: 4px;
     }
     .feature-desc {
-        font-size: 13px;
+        font-size: 12px;
         color: #B3B3B3;
         line-height: 1.4;
     }
@@ -119,8 +119,8 @@ st.markdown(
     .stButton>button[kind="primary"] {
         background-color: #1DB954 !important;
         color: #000000 !important;
-        font-weight: 800 !important;
-        font-size: 15px !important;
+        font-weight: 500 !important;
+        font-size: 24px !important;
         border-radius: 500px !important;
         border: none !important;
         padding: 12px 28px !important;
@@ -141,7 +141,7 @@ st.markdown(
         color: #FFFFFF !important;
         border: 1px solid #3E3E3E;
         border-radius: 500px;
-        font-weight: 600;
+        font-weight: 500;
         padding: 8px 18px;
     }
     .stButton>button:hover {
@@ -161,8 +161,8 @@ st.markdown(
         border: 1px solid #3E3E3E !important;
         border-radius: 8px;
         padding: 12px;
-        font-size: 14px;
-        font-weight: 700 !important;
+        font-size: 15px;
+        font-weight: 500 !important;
     }
     .stTextInput input:focus, 
     .stTextArea textarea:focus {
@@ -285,7 +285,7 @@ st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
     """
     <div class="hero-title">
-        pl<span><div class="ai-wave-badge" style="width: 32px; height: 32px; font-size: 24px;">AI</div></span>lister
+        pl<span><div class="ai-wave-badge" style="width: 40px; height: 40px; font-size: 24px;">AI</div></span>lister
     </div>
 """,
     unsafe_allow_html=True,
