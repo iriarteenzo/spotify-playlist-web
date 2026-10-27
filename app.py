@@ -9,12 +9,13 @@ import streamlit as st
 # =====================================================================
 # CONFIGURACIÓN DE CREDENCIALES DE SPOTIFY
 # =====================================================================
-CLIENT_ID = "ce6c0302d9b147aabdcd3f8f4a62bab0"
-CLIENT_SECRET = "ce6c0302d9b147aabdcd3f8f4a62bab0"
-REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/"  # O pon http://localhost:8888 si lo pruebas en local
+CLIENT_ID = ce6c0302d9b147aabdcd3f8f4a62bab0"
+CLIENT_SECRET = "c9a567e88ef9449a92648ccb958aac21"
+REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/"
+# =====================================================================
 
 # =====================================================================
-# CONFIGURACIÓN DE PÁGINA (Favicon con el badge AI)
+# CONFIGURACIÓN DE PÁGINA (Favicon ajustado al badge AI)
 # =====================================================================
 st.set_page_config(
     page_title="plAIlister", page_icon="🟢", layout="centered"
@@ -52,7 +53,7 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
-    /* Logo con ondas AI (Minúscula y centrado vertical/horizontal perfecto) */
+    /* Logo con ondas AI (Minúscula y centrado vertical perfecto en línea) */
     .logo-container {
         display: flex;
         align-items: center;
@@ -72,15 +73,16 @@ st.markdown(
         justify-content: center;
         border: 2px solid #1DB954;
         border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        font-size: 16px;
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
         color: #1DB954;
         font-weight: 800;
         background-color: rgba(29, 185, 84, 0.1);
         box-shadow: 0 0 12px rgba(29, 185, 84, 0.4);
         line-height: 1;
         vertical-align: middle;
+        flex-shrink: 0;
     }
 
     /* Hero Section Minimalista */
@@ -234,6 +236,24 @@ st.markdown(
 )
 
 # =====================================================================
+# INICIALIZACIÓN DE ESTADOS DE SESIÓN
+# =====================================================================
+if "history_playlists" not in st.session_state:
+  st.session_state["history_playlists"] = [
+      "Indie Rock Essentials",
+      "Latte & Lofi Beats",
+      "Tech House Underground",
+      "80s Synthwave Drive",
+      "Acoustic Coffee Morning",
+  ]
+
+if "show_all_history" not in st.session_state:
+  st.session_state["show_all_history"] = False
+
+if "resultado_lista" not in st.session_state:
+  st.session_state["resultado_lista"] = ""
+
+# =====================================================================
 # BARRA LATERAL (SIDEBAR CON BADGE AI EN MINÚSCULA)
 # =====================================================================
 with st.sidebar:
@@ -299,120 +319,45 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
-# =====================================================================
-# INICIALIZACIÓN DE ESTADOS DE SESIÓN
-# =====================================================================
-if "history_playlists" not in st.session_state:
-  st.session_state["history_playlists"] = [
-      "Indie Rock Essentials",
-      "Latte & Lofi Beats",
-      "Tech House Underground",
-      "80s Synthwave Drive",
-      "Acoustic Coffee Morning",
-  ]
-
-if "show_all_history" not in st.session_state:
-  st.session_state["show_all_history"] = False
-
-if "resultado_lista" not in st.session_state:
-  st.session_state["resultado_lista"] = ""
-
-# =====================================================================
-# BARRA LATERAL (SIDEBAR)
-# =====================================================================
-with st.sidebar:
-  st.markdown(
-      """
-        <div class="logo-container">
-            pl<span><div class="ai-wave-badge">AI</div></span>lister
-        </div>
-    """,
-      unsafe_allow_html=True,
-  )
-
-  st.markdown("---")
-  st.markdown(
-      "<h3 style='font-size: 20px; text-transform: uppercase; letter-spacing:"
-      " 1px;'>Últimas playlists</h3>",
-      unsafe_allow_html=True,
-  )
-
-  limit_display = (
-      len(st.session_state["history_playlists"])
-      if st.session_state["show_all_history"]
-      else min(5, len(st.session_state["history_playlists"]))
-  )
-  recent_playlists = st.session_state["history_playlists"][::-1][
-      :limit_display
-  ]
-
-  for pl in recent_playlists:
-    st.markdown(
-        f"<p style='color: #FFFFFF; font-size: 15px; margin: 4px 0; font-weight:"
-        f" 500;'>• {pl}</p>",
-        unsafe_allow_html=True,
-    )
-
-  if len(st.session_state["history_playlists"]) > 5:
-    if st.button(
-        "Ver más" if not st.session_state["show_all_history"] else "Ver menos",
-        key="btn_ver_mas",
-        use_container_width=True,
-    ):
-      st.session_state["show_all_history"] = not st.session_state[
-          "show_all_history"
-      ]
-      st.rerun()
-
-# =====================================================================
-# PANTALLA PRINCIPAL
-# =====================================================================
-
-# HERO SECTION ESTÁTICO
-st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
-    """
-    <div class="hero-title">
-        pl<span><div class="ai-wave-badge" style="width: 40px; height: 40px; font-size: 24px;">AI</div></span>lister
-    </div>
-""",
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<div class="hero-subtitle">Genera playlists con IA y subelas a Spotify'"</div>",
+    '<div class="hero-subtitle">Inteligencia artificial aplicada a la curación'
+    " musical con Spotify</div>",
     unsafe_allow_html=True,
 )
 
 st.markdown(
     "<div style='font-size: 15px; color: #FFFFFF; font-weight: 700; margin-top:"
-    " 8px; margin-bottom: 4px;</div>",
+    " 16px; margin-bottom: 12px;'>Usa plAIlister para:</div>",
     unsafe_allow_html=True,
 )
 
 st.markdown(
     """
     <div class="feature-card">
-        <div class="feature-title">Genera nuevas playlists con IA</div>
+        <div class="feature-title">Generar nuevas playlists con IA</div>
         <div class="feature-desc">Crea colecciones musicales personalizadas al instante describiendo cualquier concepto, género o atmósfera.</div>
     </div>
     <div class="feature-card">
-        <div class="feature-title">Descubre nuevos artistas</div>
-        <div class="feature-desc">Explora recomendaciones basadas en algoritmos de inteligencia artificial que cruzan estilos musicales afines.</div>
+        <div class="feature-title">Descubrir nuevos artistas</div>
+        <div class="feature-desc">Explora recomendaciones expertas basadas en algoritmos de inteligencia artificial que cruzan estilos musicales afines.</div>
     </div>
     <div class="feature-card">
-        <div class="feature-title">Conecta tu musica a Spotify</div>
-        <div class="feature-desc">Amplia tu biblioteca con selecciones inteligentes conectadas directamente a tu cuenta de Spotify.</div>
+        <div class="feature-title">Ampliar tus gustos musicales</div>
+        <div class="feature-desc">Evoluciona tu biblioteca con selecciones inteligentes conectadas directamente a tu cuenta de Spotify.</div>
     </div>
 """,
     unsafe_allow_html=True,
 )
 
+st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("---")
+
 # =====================================================================
 # BLOQUE DEL GENERADOR DE PLAYLISTS CON IA
 # =====================================================================
 st.markdown(
-    "<h2 style='font-size: 22px; margin-bottom: 4px;'>Generador de listas'</h2>",
+    "<h2 style='font-size: 22px; margin-bottom: 16px;'>Generador de listas"
+    " inteligente</h2>",
     unsafe_allow_html=True,
 )
 
@@ -420,7 +365,7 @@ st.markdown(
 prompt_usuario = st.text_area(
     "Describe la música que deseas generar:",
     value="",
-    height=200,
+    height=100,
     key="main_prompt_box",
 )
 
@@ -428,10 +373,10 @@ prompt_usuario = st.text_area(
 col_p1, col_p2, col_p3 = st.columns(3)
 with col_p1:
   num_canciones = st.slider(
-      "Cantidad de canciones", min_value=5, max_value=500, value=15
+      "Cantidad de canciones", min_value=5, max_value=40, value=15
   )
 with col_p2:
-  num_artistas = st.slider("Artistas distintos", min_value=1, max_value=50, value=5)
+  num_artistas = st.slider("Artistas distintos", min_value=1, max_value=12, value=5)
 with col_p3:
   temperatura = st.slider(
       "Creatividad", min_value=0.0, max_value=1.0, value=0.7
@@ -446,7 +391,7 @@ if st.button("Generar playlist", type="primary", use_container_width=True):
         "Por favor, describe la música o los artistas que deseas incluir."
     )
   else:
-    with st.spinner("Generando nueva playlist..."):
+    with st.spinner("Gemini está curando tu selección musical..."):
       try:
         ai_client = genai.Client()
         prompt_sistema = (
@@ -521,13 +466,13 @@ st.markdown(
 tipo_origen = st.radio(
     "Origen de las canciones:",
     [
-        "Usar la playlist generada",
-        "Subir un archivo",
+        "Usar la lista generada por IA de arriba",
+        "Subir un archivo .txt externo",
     ],
 )
 
 uploaded_file = None
-if tipo_origen == "Subir un archivo":
+if tipo_origen == "Subir un archivo .txt externo":
   uploaded_file = st.file_uploader(
       "Sube tu archivo de canciones (.txt)", type=["txt"]
   )
@@ -537,7 +482,7 @@ nombre_playlist = st.text_input(
 )
 
 texto_a_procesar = ""
-if tipo_origen == "Usar la playlist generada":
+if tipo_origen == "Usar la lista generada por IA de arriba":
   texto_a_procesar = st.session_state.get("resultado_lista", "")
 else:
   if uploaded_file:
