@@ -50,9 +50,16 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 
-/* ==========================================
-   1. SISTEMA DE VARIABLES (MODO CLARO / OSCURO)
-   ================================---------- */
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
+
+/* --- DESIGN SYSTEM: Variables de Color (Sistema, Oscuro y Claro) --- */
+:root {
+  --green: #1ed760;
+  --green-hover: #1abc54;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #121212;
@@ -83,14 +90,19 @@ st.markdown("""
   }
 }
 
-:root {
-  --green: #1ed760;
-  --green-hover: #1abc54;
+[data-theme="dark"] {
+  --bg: #121212; --panel: #1a1a1a; --panel-sub: #222222; --panel-hover: #2a2a2a;
+  --border: #333333; --border-focus: #555555; --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.60); --input-bg: #181818; --sidebar-bg: #0a0a0a;
 }
 
-/* ==========================================
-   2. ESTILOS GLOBALES Y TIPOGRAFÍA
-   ================================---------- */
+[data-theme="light"] {
+  --bg: #f8f9fa; --panel: #ffffff; --panel-sub: #f1f3f5; --panel-hover: #e9ecef;
+  --border: #dee2e6; --border-focus: #adb5bd; --text: #212529;
+  --muted: #6c757d; --input-bg: #ffffff; --sidebar-bg: #f1f3f5;
+}
+
+/* --- Estructura Global y Tipografía --- */
 .stApp {
   background-color: var(--bg);
   color: var(--text);
@@ -104,9 +116,7 @@ st.markdown("""
   padding: 32px 20px 48px;
 }
 
-header[data-testid="stHeader"] {
-  background: transparent;
-}
+header[data-testid="stHeader"] { background: transparent; }
 
 h1, h2, h3 {
   font-family: 'DM Serif Display', Georgia, serif !important;
@@ -126,20 +136,7 @@ p, label, input, textarea, button {
   color: var(--text);
 }
 
-.muted {
-  color: var(--muted);
-  font-size: 15px;
-}
-
-.eyebrow {
-  color: var(--green);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1.8px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
+/* --- Logotipo Adaptativo --- */
 .brand {
   display: flex;
   align-items: center;
@@ -164,16 +161,27 @@ p, label, input, textarea, button {
   font-weight: 700;
 }
 
-/* ==========================================
-   3. COMPONENTES Y CONTENEDORES
-   ================================---------- */
+.eyebrow {
+  color: var(--green);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* --- Componentes: Prompt Shell e Inputs --- */
 .st-key-prompt_shell {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 16px;
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin: 24px 0 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
 }
 
@@ -183,7 +191,6 @@ p, label, input, textarea, button {
   border: 1px solid var(--border) !important;
   border-radius: 12px !important;
   color: var(--text) !important;
-  font-size: 15px !important;
   padding: 14px !important;
 }
 
@@ -192,24 +199,8 @@ p, label, input, textarea, button {
   box-shadow: 0 0 0 1px var(--green) !important;
 }
 
-.result-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  margin: 16px 0;
-}
-
-section[data-testid="stSidebar"] {
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--border);
-}
-
-/* ==========================================
-   4. BOTONES Y VARIANTES
-   ================================---------- */
-.stButton > button, 
-.stLinkButton > a {
+/* --- Botones --- */
+.stButton > button, .stLinkButton > a {
   min-height: 46px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -225,11 +216,9 @@ section[data-testid="stSidebar"] {
   text-decoration: none;
 }
 
-.stButton > button:hover, 
-.stLinkButton > a:hover {
+.stButton > button:hover, .stLinkButton > a:hover {
   border-color: var(--border-focus);
   background: var(--panel-hover);
-  color: var(--text);
 }
 
 .stButton > button[kind="primary"] {
@@ -244,9 +233,12 @@ section[data-testid="stSidebar"] {
   border-color: var(--green-hover) !important;
 }
 
-/* ==========================================
-   5. LISTADO DE CANCIONES Y RESPONSIVIDAD
-   ================================---------- */
+/* --- Barra Lateral y Filas de Listas --- */
+section[data-testid="stSidebar"] {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+}
+
 .track-row {
   border-bottom: 1px solid var(--border);
   padding: 14px 4px;
@@ -266,22 +258,24 @@ section[data-testid="stSidebar"] {
 .track-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text);
 }
 
-.track-artist, 
-.track-album {
+.track-artist, .track-album {
   color: var(--muted);
   font-size: 12px;
 }
 
+.result-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
 @media (max-width: 640px) {
-  .block-container {
-    padding: 16px 12px 32px;
-  }
-  h1 {
-    font-size: 2rem !important;
-  }
+  .block-container { padding: 16px 12px 32px; }
+  h1 { font-size: 2rem !important; }
 }
 </style>
 """, unsafe_allow_html=True)
