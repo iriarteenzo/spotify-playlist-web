@@ -87,7 +87,7 @@ st.markdown(
 
     /* Hero Section Minimalista */
     .hero-container {
-        padding: 10px 0 20px 0;
+        padding: 10px 0 10px 0;
         text-align: left;
     }
     .hero-title {
@@ -342,7 +342,7 @@ st.markdown(
 # BLOQUE DEL GENERADOR DE PLAYLISTS CON IA
 # =====================================================================
 st.markdown(
-    "<h2 style='font-size: 22px; margin-bottom: 12px;'>Generador de listas"
+    "<h2 style='font-size: 22px; margin-bottom: 8px;'>Generador de listas"
     " inteligente</h2>",
     unsafe_allow_html=True,
 )
@@ -368,7 +368,7 @@ with col_p3:
       "Creatividad", min_value=0.0, max_value=1.0, value=0.7
   )
 
-st.markdown("<div style='margin: 16px 0;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
 
 # Botón de Generación Directa actualizado al modelo gemini-3.8-flash
 if st.button("Generar playlist", type="primary", use_container_width=True):
