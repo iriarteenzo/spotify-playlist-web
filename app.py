@@ -15,27 +15,29 @@ REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.ap
 # =====================================================================
 
 # =====================================================================
-# CONFIGURACIÓN DE PÁGINA (Favicon ajustado al badge AI)
+# CONFIGURACIÓN DE PÁGINA
 # =====================================================================
-st.set_page_config(page_title="pl(ai)lister", page_icon="🟢", layout="centered")
+st.set_page_config(
+    page_title="pl(ai)lister",
+    page_icon="🟢",
+    layout="centered",
+    initial_sidebar_state="expanded",
+)
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - CORREGIDO UPLOAD Y SIDEBAR)
+# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - CORREGIDO DEFINITIVO)
 # =====================================================================
 st.markdown(
     """
     <style>
-    /* Importar Google Sans desde Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&display=swap');
 
-    /* Fondo general de la aplicación y nueva tipografía */
     .stApp {
         background-color: #121212;
         color: #FFFFFF;
         font-family: 'Google Sans', Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
-    /* Barra lateral en negro absoluto y limpieza de textos residuales */
     section[data-testid="stSidebar"] {
         background-color: #000000;
         border-right: 1px solid #282828;
@@ -50,12 +52,7 @@ st.markdown(
     section[data-testid="stSidebar"] h3 {
         color: #FFFFFF !important;
     }
-    /* Ocultar elementos flotantes no deseados en la cabecera del sidebar */
-    section[data-testid="stSidebar"] [data-testid="stDecoration"] {
-        display: none;
-    }
 
-    /* Logo con ondas AI (Minúscula y centrado vertical perfecto en línea) */
     .logo-container {
         display: flex;
         align-items: center;
@@ -87,7 +84,6 @@ st.markdown(
         flex-shrink: 0;
     }
 
-    /* Hero Section Minimalista */
     .hero-container {
         padding: 10px 0 10px 0;
         text-align: left;
@@ -112,7 +108,6 @@ st.markdown(
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
 
-    /* Tarjetas estáticas visibles */
     .feature-card {
         background: rgba(255, 255, 255, 0.03);
         padding: 18px 20px;
@@ -134,7 +129,6 @@ st.markdown(
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
 
-    /* BOTONES PRIMARIOS: Verde Spotify con TEXTO NEGRO PURO */
     .stButton>button[kind="primary"] {
         background-color: #1DB954 !important;
         color: #000000 !important;
@@ -155,7 +149,6 @@ st.markdown(
         background-color: #1ed760 !important;
     }
 
-    /* Botones secundarios oscuros */
     .stButton>button {
         background-color: #282828;
         color: #FFFFFF !important;
@@ -170,7 +163,6 @@ st.markdown(
         background-color: #3E3E3E;
     }
 
-    /* FORZADO ABSOLUTO DE INPUTS Y TEXTAREAS: Fondo #d6d6d6 y Texto #000000 */
     .stTextInput input, 
     .stTextArea textarea,
     div[data-baseweb="input"] input,
@@ -194,12 +186,11 @@ st.markdown(
         -webkit-text-fill-color: #000000 !important;
     }
 
-    /* Sliders con acento en verde Spotify */
     div[data-baseweb="slider"] div[role="slider"] {
         background-color: #1DB954 !important;
     }
 
-    /* Corrección limpia del File Uploader (Evita texto duplicado y añade icono/estilo correcto) */
+    /* Corrección limpia del File Uploader (Evita duplicidad de texto y estiliza el botón) */
     div[data-testid="stFileUploader"] {
         background-color: #181818;
         border: 1px dashed #3E3E3E;
@@ -210,9 +201,8 @@ st.markdown(
         background-color: #d6d6d6 !important;
         border: none !important;
     }
-    /* Ocultar el texto duplicado nativo y estilizar el botón de subida */
-    div[data-testid="stFileUploader"] section div {
-        color: transparent;
+    div[data-testid="stFileUploader"] section div span {
+        display: none !important;
     }
     div[data-testid="stFileUploader"] button {
         color: #3e3e3e !important;
@@ -222,7 +212,6 @@ st.markdown(
         border: 1px solid #CCCCCC !important;
         border-radius: 6px !important;
     }
-    div[data-testid="stFileUploader"] span, 
     div[data-testid="stFileUploader"] small {
         color: #555555 !important;
         font-family: 'Google Sans', Helvetica, sans-serif;
@@ -248,13 +237,7 @@ st.markdown(
 # INICIALIZACIÓN DE ESTADOS DE SESIÓN
 # =====================================================================
 if "history_playlists" not in st.session_state:
-  st.session_state["history_playlists"] = [
-      "Indie Rock Essentials",
-      "Latte & Lofi Beats",
-      "Tech House Underground",
-      "80s Synthwave Drive",
-      "Acoustic Coffee Morning",
-  ]
+  st.session_state["history_playlists"] = []
 
 if "show_all_history" not in st.session_state:
   st.session_state["show_all_history"] = False
@@ -263,7 +246,7 @@ if "resultado_lista" not in st.session_state:
   st.session_state["resultado_lista"] = ""
 
 # =====================================================================
-# BARRA LATERAL (SIDEBAR CON BADGE AI EN MINÚSCULA)
+# BARRA LATERAL (SIDEBAR)
 # =====================================================================
 with st.sidebar:
   st.markdown(
@@ -282,32 +265,43 @@ with st.sidebar:
       unsafe_allow_html=True,
   )
 
-  limit_display = (
-      len(st.session_state["history_playlists"])
-      if st.session_state["show_all_history"]
-      else min(5, len(st.session_state["history_playlists"]))
-  )
-  recent_playlists = st.session_state["history_playlists"][::-1][
-      :limit_display
-  ]
-
-  for pl in recent_playlists:
+  if len(st.session_state["history_playlists"]) == 0:
     st.markdown(
-        f"<p style='color: #FFFFFF; font-size: 14px; margin: 8px 0; font-weight:"
-        f" 500;'>• {pl}</p>",
+        "<p style='color: #727272; font-style: italic; margin-bottom: 12px;'>Aún"
+        " no hay listas</p>",
         unsafe_allow_html=True,
     )
-
-  if len(st.session_state["history_playlists"]) > 5:
-    if st.button(
-        "Ver más" if not st.session_state["show_all_history"] else "Ver menos",
-        key="btn_ver_mas",
-        use_container_width=True,
-    ):
-      st.session_state["show_all_history"] = not st.session_state[
-          "show_all_history"
-      ]
+    if st.button("Generar una nueva playlist", key="btn_sidebar_gen"):
       st.rerun()
+    if st.button("Subir una playlist", key="btn_sidebar_sub"):
+      st.rerun()
+  else:
+    limit_display = (
+        len(st.session_state["history_playlists"])
+        if st.session_state["show_all_history"]
+        else min(5, len(st.session_state["history_playlists"]))
+    )
+    recent_playlists = st.session_state["history_playlists"][::-1][
+        :limit_display
+    ]
+
+    for pl in recent_playlists:
+      st.markdown(
+          f"<p style='color: #FFFFFF; font-size: 14px; margin: 8px 0;"
+          f" font-weight: 500;'>• {pl}</p>",
+          unsafe_allow_html=True,
+      )
+
+    if len(st.session_state["history_playlists"]) > 5:
+      if st.button(
+          "Ver más" if not st.session_state["show_all_history"] else "Ver menos",
+          key="btn_ver_mas",
+          use_container_width=True,
+      ):
+        st.session_state["show_all_history"] = not st.session_state[
+            "show_all_history"
+        ]
+        st.rerun()
 
   st.markdown("---")
   st.markdown(
@@ -317,7 +311,7 @@ with st.sidebar:
   )
 
 # =====================================================================
-# PANTALLA PRINCIPAL (HERO TITLE CON BADGE AI EN MINÚSCULA)
+# PANTALLA PRINCIPAL
 # =====================================================================
 st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
@@ -356,7 +350,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Campo de texto principal
 prompt_usuario = st.text_area(
     "Describe la música que deseas generar:",
     value="",
@@ -364,7 +357,6 @@ prompt_usuario = st.text_area(
     key="main_prompt_box",
 )
 
-# Parámetros avanzados
 col_p1, col_p2, col_p3 = st.columns(3)
 with col_p1:
   num_canciones = st.slider(
@@ -379,7 +371,6 @@ with col_p3:
 
 st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
 
-# Botón de Generación Directa actualizado al modelo gemini-3.8-flash
 if st.button("Generar playlist", type="primary", use_container_width=True):
   if not prompt_usuario.strip():
     st.error(
@@ -419,7 +410,6 @@ if st.button("Generar playlist", type="primary", use_container_width=True):
       except Exception as e:
         st.error(f"Error al conectar con la inteligencia artificial: {e}")
 
-# Visualización y edición de la playlist generada por IA
 if st.session_state["resultado_lista"]:
   st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
   st.markdown(
@@ -468,13 +458,11 @@ tipo_origen = st.radio(
 
 uploaded_file = None
 if tipo_origen == "Subir un archivo":
-  # Lógica dinámica: cambia el texto del botón según si ya se cargó el archivo o no
-  label_uploader = (
-      "📂 Subir archivo" if "uploaded_file" in locals() and uploaded_file else "📁 Seleccionar archivo"
-  )
   uploaded_file = st.file_uploader(
-      label_uploader, type=["txt"]
+      "Seleccionar archivo", type=["txt"], key="uploader_principal"
   )
+  if uploaded_file:
+    st.info("Subir archivo")
 
 nombre_playlist = st.text_input(
     "Nombre de la playlist en Spotify", value="Mi nueva playlist"
