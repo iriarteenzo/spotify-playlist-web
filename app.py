@@ -508,6 +508,7 @@ def connect_spotify():
         unsafe_allow_html=True,
     )
 
+
 # ---------- Procesamiento de canciones ----------
 def parse_tracks(raw, requested_count):
     if isinstance(raw, str):
@@ -839,7 +840,7 @@ if st.session_state.step == "create":
         unsafe_allow_html=True,
     )
 
-with st.container(key="prompt_shell"):
+    with st.container(key="prompt_shell"):
         st.text_area(
             "Tu petición",
             key="prompt",
