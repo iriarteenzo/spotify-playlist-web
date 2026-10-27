@@ -274,13 +274,7 @@ with st.sidebar:
       st.session_state["show_all_history"] = not st.session_state[
           "show_all_history"
       ]
-      st.rerun()
-
-  st.markdown("---")
-  st.markdown(
-      "<p style='font-size: 12px; color: #727272;'>Conectado a Spotify API"
-      " & Google GenAI</p>",
-      unsafe_allow_html=True,
+      st.rerun()
   )
 
 # =====================================================================
@@ -292,7 +286,7 @@ st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
     """
     <div class="hero-title">
-        pl<span><div class="ai-wave-badge" style="width: 32px; height: 32px; font-size: 16px;">AI</div></span>lister
+        pl<span><div class="ai-wave-badge" style="width: 32px; height: 32px; font-size: 24px;">AI</div></span>lister
     </div>
 """,
     unsafe_allow_html=True,
@@ -316,11 +310,11 @@ st.markdown(
     </div>
     <div class="feature-card">
         <div class="feature-title">Descubrir nuevos artistas</div>
-        <div class="feature-desc">Explora recomendaciones expertas basadas en algoritmos de inteligencia artificial que cruzan estilos musicales afines.</div>
+        <div class="feature-desc">Explora recomendaciones basadas en algoritmos de inteligencia artificial que cruzan estilos musicales afines.</div>
     </div>
     <div class="feature-card">
-        <div class="feature-title">Ampliar tus gustos musicales</div>
-        <div class="feature-desc">Evoluciona tu biblioteca con selecciones inteligentes conectadas directamente a tu cuenta de Spotify.</div>
+        <div class="feature-title">Conectada a Spotify</div>
+        <div class="feature-desc">Amplia tu biblioteca con selecciones inteligentes conectadas directamente a tu cuenta de Spotify.</div>
     </div>
 """,
     unsafe_allow_html=True,
