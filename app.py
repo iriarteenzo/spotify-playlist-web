@@ -5,7 +5,6 @@ import secrets
 import time
 
 import streamlit as st
-import streamlit.components.v1 as components
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from google import genai
@@ -25,7 +24,6 @@ st.set_page_config(
 )
 
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
-DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
 SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private"
 
 
@@ -38,9 +36,6 @@ def get_secret(key, default=""):
 
 GEMINI_API_KEY = get_secret("GEMINI_API_KEY")
 GEMINI_MODEL = get_secret("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
-
-OPENAI_API_KEY = get_secret("OPENAI_API_KEY")
-OPENAI_MODEL = get_secret("OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
 
 SPOTIFY_CLIENT_ID = get_secret("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = get_secret("SPOTIFY_CLIENT_SECRET")
@@ -395,14 +390,28 @@ def spotify_connect_button():
 
 
 # =========================================================
-# GENERACIÓN CON PUTER.COM (GRATIS SIN CRÉDITOS) Y FALLBACK
+# GENERACIÓN CON PUTER.COM Y GEMINI (FALLBACK)
 # =========================================================
 
+def _call_gemini(instructions, prompt, temperature):
+    if not GEMINI_API_KEY:
+        raise ValueError("Sin GEMINI_API_KEY")
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
+        config=types.GenerateContentConfig(
+            temperature=temperature,
+            response_mime_type="application/json",
+        ),
+    )
+    return response.text
+
+
 def _call_puter(instructions, prompt, temperature):
-    """Usa el servicio gratuito de Puter.com sin necesidad de tarjeta ni créditos."""
     client = OpenAI(
         base_url="https://api.puter.com/v1",
-        api_key="puter_free_session"  # Puter gestiona el acceso mediante la sesión web
+        api_key="puter_free_session"
     )
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -433,12 +442,11 @@ del usuario. No inventes canciones. Evita duplicados.
 No incluyas explicaciones ni Markdown.
 """
 
-    # Si prefieres usar Puter directamente, lo ponemos al inicio del pipeline
     if provider_preference == "Puter.com":
         pipeline = [("Puter.com", _call_puter), ("Gemini", _call_gemini)]
     elif provider_preference == "Gemini":
         pipeline = [("Gemini", _call_gemini), ("Puter.com", _call_puter)]
-    else:  # Modo automático: prioriza Puter primero para evitar los errores de pago de OpenAI y saturación de Gemini
+    else:
         pipeline = [("Puter.com", _call_puter), ("Gemini", _call_gemini)]
 
     response_text = None
@@ -487,7 +495,8 @@ No incluyas explicaciones ni Markdown.
         )
 
     return tracks
-    
+
+
 # =========================================================
 # BÚSQUEDA DE SPOTIFY Y ESTADO
 # =========================================================
@@ -555,11 +564,7 @@ def reset_app():
 @st.dialog("Ajustes de generación", width="small")
 def settings_dialog():
     st.markdown('<p class="muted">Personaliza la selección musical y el motor de IA.</p>', unsafe_allow_html=True)
-st.selectbox(
-        "Proveedor preferido",
-        options=["Automático (Fallback)", "Puter.com", "Gemini"],
-        key="ai_provider",
-    )
+    st.selectbox("Proveedor preferido", options=["Automático (Fallback)", "Puter.com", "Gemini"], key="ai_provider")
     st.slider("Cantidad de canciones", 5, 50, key="count")
     st.slider("Cantidad de artistas", 1, 15, key="artist_count")
     st.markdown("**Creatividad**")
