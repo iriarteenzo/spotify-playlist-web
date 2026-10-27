@@ -267,7 +267,7 @@ st.markdown(
         padding: 0 20px !important;
         font-family: "Google Sans", Arial, sans-serif !important;
         font-size: 14px !important;
-        font-weight: 600 !important;
+        font-weight: 8 !important;
         line-height: 1.2 !important;
         border: 1px solid #494949 !important;
         background: #292929 !important;
@@ -280,7 +280,7 @@ st.markdown(
     .stLinkButton > a:hover {
         background: #363636 !important;
         border-color: #666666 !important;
-        color: #ffffff !important;
+        color: #000000 !important;
     }
 
     .stButton > button:focus-visible,
@@ -1046,9 +1046,6 @@ if st.session_state.step == "create":
         'de ánimo o una mezcla inesperada. Tu próxima playlist '
         'empieza aquí.</p>',
         unsafe_allow_html=True,
-    )
-
-    st.markdown('<div class="composer">', unsafe_allow_html=True)
 
     st.text_area(
         "Tu petición",
