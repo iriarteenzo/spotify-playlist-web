@@ -11,7 +11,8 @@ import streamlit as st
 # =====================================================================
 CLIENT_ID = "ce6c0302d9b147aabdcd3f8f4a62bab0"
 CLIENT_SECRET = "c9a567e88ef9449a92648ccb958aac21"
-REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/" =====================================================================
+REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/"
+# =====================================================================
 
 # =====================================================================
 # CONFIGURACIÓN DE PÁGINA
