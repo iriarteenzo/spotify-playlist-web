@@ -11,8 +11,7 @@ import streamlit as st
 # =====================================================================
 CLIENT_ID = "ce6c0302d9b147aabdcd3f8f4a62bab0"
 CLIENT_SECRET = "c9a567e88ef9449a92648ccb958aac21"
-REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/"
-# =====================================================================
+REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/" =====================================================================
 
 # =====================================================================
 # CONFIGURACIÓN DE PÁGINA
@@ -25,7 +24,7 @@ st.set_page_config(
 )
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - DISEÑO COMPACTO)
+# ESTILOS CSS UX/UI (MÁRGENES CUIDADOS Y CONTENEDOR ESTILO GEMINI)
 # =====================================================================
 st.markdown(
     """
@@ -38,14 +37,20 @@ st.markdown(
         font-family: 'Google Sans', Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
+    /* Márgenes y paddings globales óptimos para evitar cortes o bordes pegados */
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 2rem !important;
+        padding-top: 2rem !important;
+        padding-bottom: 3rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        max-width: 750px;
     }
 
     section[data-testid="stSidebar"] {
         background-color: #000000;
         border-right: 1px solid #282828;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
     }
     section[data-testid="stSidebar"] p, 
     section[data-testid="stSidebar"] span, 
@@ -63,12 +68,12 @@ st.markdown(
         align-items: center;
         justify-content: flex-start;
         gap: 3px;
-        font-size: 30px;
+        font-size: 28px;
         font-weight: 800;
         letter-spacing: -0.5px;
         color: #FFFFFF;
-        margin-bottom: 14px;
-        padding-top: 4px;
+        margin-bottom: 12px;
+        padding-top: 10px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .ai-wave-badge-sidebar {
@@ -77,9 +82,9 @@ st.markdown(
         justify-content: center;
         border: 2px solid #1DB954;
         border-radius: 50%;
-        width: 25px;
-        height: 25px;
-        font-size: 14px;
+        width: 23px;
+        height: 23px;
+        font-size: 13px;
         color: #1DB954;
         font-weight: 800;
         background-color: rgba(29, 185, 84, 0.1);
@@ -89,52 +94,71 @@ st.markdown(
         flex-shrink: 0;
     }
 
+    /* Hero Section Compacto */
     .hero-container {
-        padding: 0px 0 5px 0;
+        padding: 0px 0 10px 0;
         text-align: left;
     }
     .hero-title {
-        font-size: 30px;
+        font-size: 32px;
         font-weight: 800;
         color: #FFFFFF;
         letter-spacing: -1px;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        gap: 4px;
+        gap: 6px;
         font-family: 'Google Sans', Helvetica, sans-serif;
+    }
+    .ai-wave-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #1DB954;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        font-size: 15px;
+        color: #1DB954;
+        font-weight: 800;
+        background-color: rgba(29, 185, 84, 0.1);
+        box-shadow: 0 0 10px rgba(29, 185, 84, 0.4);
+        line-height: 1;
+        vertical-align: middle;
+        flex-shrink: 0;
     }
 
     .feature-card {
         background: rgba(255, 255, 255, 0.03);
-        padding: 10px 14px;
-        border-radius: 6px;
-        border-left: 2px solid #1DB954;
-        margin-bottom: 6px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border-left: 3px solid #1DB954;
+        margin-bottom: 8px;
     }
     .feature-title {
         font-size: 14px;
         font-weight: 700;
         color: #FFFFFF;
-        margin-bottom: 2px;
+        margin-bottom: 3px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .feature-desc {
-        font-size: 11px;
+        font-size: 12px;
         color: #B3B3B3;
-        line-height: 1.2;
+        line-height: 1.3;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
 
+    /* Botones principales y secundarios */
     .stButton>button[kind="primary"] {
         background-color: #1DB954 !important;
         color: #000000 !important;
-        font-weight: 500 !important;
-        font-size: 16px !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
         border-radius: 500px !important;
         border: none !important;
-        padding: 8px 20px !important;
+        padding: 10px 22px !important;
         box-shadow: 0 4px 14px rgba(29, 185, 84, 0.4);
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
@@ -153,7 +177,7 @@ st.markdown(
         border: 1px solid #3E3E3E;
         border-radius: 500px;
         font-weight: 500;
-        padding: 6px 14px;
+        padding: 8px 16px;
         font-family: 'Google Sans', Helvetica, sans-serif;
         font-size: 13px;
     }
@@ -162,27 +186,22 @@ st.markdown(
         background-color: #3E3E3E;
     }
 
+    /* Inputs de texto estilo Gemini con bordes limpios */
     .stTextInput input, 
-    .stTextArea textarea,
-    div[data-baseweb="input"] input,
-    div[data-baseweb="base-input"] input,
-    textarea.stTextArea {
-        background-color: #d6d6d6 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
+    .stTextArea textarea {
+        background-color: #1e1e1e !important;
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
         border: 1px solid #3E3E3E !important;
-        border-radius: 8px;
-        padding: 10px;
-        font-size: 14px;
-        font-weight: 500 !important;
+        border-radius: 12px !important;
+        padding: 12px !important;
+        font-size: 14px !important;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .stTextInput input:focus, 
     .stTextArea textarea:focus {
         border-color: #1DB954 !important;
         box-shadow: 0 0 0 1px #1DB954 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
     }
 
     div[data-baseweb="slider"] div[role="slider"] {
@@ -220,14 +239,14 @@ if "resultado_lista" not in st.session_state:
 if "paso_actual" not in st.session_state:
   st.session_state["paso_actual"] = "creacion"
 
-if "prompt_input" not in st.session_state:
-  st.session_state["prompt_input"] = ""
+if "mostrar_ajustes" not in st.session_state:
+  st.session_state["mostrar_ajustes"] = False
 
 if "playlist_creada_url" not in st.session_state:
   st.session_state["playlist_creada_url"] = ""
 
 # =====================================================================
-# BARRA LATERAL
+# BARRA LATERAL (SIDEBAR)
 # =====================================================================
 with st.sidebar:
   st.markdown(
@@ -289,7 +308,6 @@ with st.sidebar:
       use_container_width=True,
   ):
     st.session_state["resultado_lista"] = ""
-    st.session_state["prompt_input"] = ""
     st.session_state["paso_actual"] = "creacion"
     st.rerun()
 
@@ -301,14 +319,14 @@ with st.sidebar:
   )
 
 # =====================================================================
-# HERO SECTION (Visible solo al inicio; se oculta en pasos posteriores)
+# HERO SECTION (Visible solo en el paso de creación inicial)
 # =====================================================================
-if st.session_state["paso_actual"] == "creacion" and not st.session_state["resultado_lista"]:
+if st.session_state["paso_actual"] == "creacion":
   st.markdown('<div class="hero-container">', unsafe_allow_html=True)
   st.markdown(
       """
       <div class="hero-title">
-          pl<div class="ai-wave-badge-sidebar" style="width: 26px; height: 26px; font-size: 14px; display:inline-flex;">ai</div>lister
+          pl<div class="ai-wave-badge">ai</div>lister
       </div>
   """,
       unsafe_allow_html=True,
@@ -335,135 +353,191 @@ if st.session_state["paso_actual"] == "creacion" and not st.session_state["resul
   st.markdown("---")
 
 # =====================================================================
-# BLOQUE DE CREACIÓN DE PLAYLISTS (Con Plantillas de Contexto / Moods Rápidos)
+# PASO 1: BLOQUE DE CREACIÓN DE PLAYLIST CON INTERFAZ ESTILO GEMINI
 # =====================================================================
 if st.session_state["paso_actual"] == "creacion":
   st.markdown(
-      "<h2 style='font-size: 18px; margin-bottom: 8px;'>Generador inteligente con IA</h2>",
-      unsafe_allow_html=True,
-  )
-  st.markdown(
-      "<p>Describe tu concepto musical o selecciona una plantilla rápida para empezar:</p>",
+      "<h2 style='font-size: 18px; margin-bottom: 8px;'>¿Qué música quieres"
+      " escuchar hoy?</h2>",
       unsafe_allow_html=True,
   )
 
-  # Plantillas de Contexto y Moods Rápidos (Chips / Píldoras de selección)
-  col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-  with col_m1:
-    if st.button("☕ Café & Lofi", use_container_width=True):
-      st.session_state["prompt_input"] = (
-          "Beats de lofi hip hop suaves, vinilo crujiente, ideal para trabajar, estudiar o relajarse con café."
-      )
-  with col_m2:
-    if st.button("🏃 Running", use_container_width=True):
-      st.session_state["prompt_input"] = (
-          "Temas electrónicos enérgicos, bassline rápido y motivador para correr al aire libre."
-      )
-  with col_m3:
-    if st.button("🌙 Indie Melancólico", use_container_width=True):
-      st.session_state["prompt_input"] = (
-          "Rock alternativo e indie pop nocturno, guitarras atmosféricas y voces melancólicas."
-      )
-  with col_m4:
-    if st.button("💻 Concentración", use_container_width=True):
-      st.session_state["prompt_input"] = (
-          "Música ambiental electrónica minimalista, IDM y texturas suaves para máxima concentración."
-      )
-
-  st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
-
-  # Campo de texto para el prompt
-  prompt_usuario = st.text_area(
-      "Describe la música que deseas generar:",
-      value=st.session_state["prompt_input"],
-      height=110,
-      key="main_prompt_box",
-  )
-
-  col_p1, col_p2, col_p3 = st.columns(3)
-  with col_p1:
+  # Panel de ajustes desplegable (controlado por el botón de sliders inferior izquierdo)
+  if st.session_state["mostrar_ajustes"]:
+    st.markdown(
+        "<div style='background: rgba(255,255,255,0.04); padding: 14px;"
+        " border-radius: 10px; margin-bottom: 10px;'>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='color:#FFFFFF; font-weight:600; margin-bottom:8px;'>Ajustes"
+        " de generación:</p>",
+        unsafe_allow_html=True,
+    )
     num_canciones = st.slider(
-        "Cantidad de canciones", min_value=5, max_value=100, value=15
+        "Cantidad de canciones", min_value=5, max_value=50, value=15, key="slider_can"
     )
-  with col_p2:
     num_artistas = st.slider(
-        "Artistas distintos", min_value=1, max_value=20, value=5
+        "Artistas distintos", min_value=1, max_value=15, value=5, key="slider_art"
     )
-  with col_p3:
     temperatura = st.slider(
-        "Creatividad", min_value=0.0, max_value=1.0, value=0.7
+        "Creatividad", min_value=0.0, max_value=1.0, value=0.7, key="slider_temp"
     )
+    st.markdown("</div>", unsafe_allow_html=True)
+  else:
+    # Valores por defecto si los ajustes están ocultos
+    num_canciones = 15
+    num_artistas = 5
+    temperatura = 0.7
 
-  st.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
+  # Cuadro de texto principal tipo chat/prompt
+  prompt_usuario = st.text_area(
+      "Escribe tu prompt musical aquí...",
+      value="",
+      height=100,
+      key="main_prompt_box",
+      label_visibility="collapsed",
+  )
 
-  if st.button("Generar playlist", type="primary", use_container_width=True):
-    if not prompt_usuario.strip():
-      st.error(
-          "Por favor, describe detalladamente la música o los artistas que deseas incluir."
-      )
-    else:
-      resultado_ia = ""
-      with st.spinner(
-          "Generando curación musical única y específica con Inteligencia Artificial..."
-      ):
-        try:
-          ai_client = genai.Client()
-          prompt_sistema = (
-              f"Eres un curador musical experto y director de programación artística. "
-              f"Tu única misión es generar una lista EXACTA de {num_canciones} canciones reales, "
-              f"coherentes, altamente específicas y rigurosamente adaptadas al siguiente prompt del usuario, "
-              f"incorporando aproximadamente {num_artistas} artistas diferentes.\n\n"
-              f"REGLAS ABSOLUTAS:\n"
-              f"1. PROHIBIDO usar resultados genéricos, plantillas repetitivas o listas estándar predefinidas. "
-              f"Cada canción debe ser un tema real publicado por dichos artistas o acorde absoluto al estilo solicitado.\n"
-              f"2. Devuelve exclusivamente la lista de canciones en formato de texto plano, una por línea.\n"
-              f"3. Formato estricto por línea: 'Artista - Canción'.\n"
-              f"4. Sin numeración, sin viñetas, sin introducciones ni comentarios adicionales."
-          )
-          response = ai_client.models.generate_content(
-              model="gemini-3.8-flash",
-              contents=f"{prompt_sistema}\n\nPetición del usuario: {prompt_usuario}",
-              config=types.GenerateContentConfig(temperature=temperatura),
-          )
-          resultado_ia = response.text.strip()
-        except Exception as e:
-          st.error(
-              f"Error al conectar con la Inteligencia Artificial. Por favor, verifica tu conexión: {e}"
-          )
+  # Fila inferior emulando la botonera de Gemini (Sliders a la izquierda, Enviar a la derecha)
+  col_gem1, col_gem2 = st.columns([1, 4])
+  with col_gem1:
+    icon_ajustes = "🎛️ Ocultar ajustes" if st.session_state["mostrar_ajustes"] else "🎛️ Ajustes"
+    if st.button(icon_ajustes, use_container_width=True, key="btn_toggle_ajustes"):
+      st.session_state["mostrar_ajustes"] = not st.session_state["mostrar_ajustes"]
+      st.rerun()
 
-        if resultado_ia:
-          st.session_state["resultado_lista"] = resultado_ia
-          nuevo_nombre = prompt_usuario[:25] + "..."
-          if nuevo_nombre not in st.session_state["history_playlists"]:
-            st.session_state["history_playlists"].append(nuevo_nombre)
-          st.session_state["paso_actual"] = "revision"
-          st.rerun()
+  with col_gem2:
+    if st.button(
+        "Generar playlist con IA ➔", type="primary", use_container_width=True, key="btn_enviar_gemini"
+    ):
+      if not prompt_usuario.strip():
+        st.error(
+            "Por favor, describe detalladamente la música o los artistas que"
+            " deseas incluir."
+        )
+      else:
+        resultado_ia = ""
+        with st.spinner(
+            "Generando curación musical única con Inteligencia Artificial..."
+        ):
+          try:
+            ai_client = genai.Client()
+            prompt_sistema = (
+                f"Eres un curador musical experto. Genera una lista EXACTA de {num_canciones} "
+                f"canciones reales, coherentes y adaptadas al prompt del usuario, "
+                f"incorporando aproximadamente {num_artistas} artistas diferentes.\n\n"
+                f"REGLAS ABSOLUTAS:\n"
+                f"1. PROHIBIDO usar resultados genéricos o repetitivos.\n"
+                f"2. Devuelve exclusivamente la lista en formato de texto plano, una por línea.\n"
+                f"3. Formato estricto por línea: 'Artista - Canción'.\n"
+                f"4. Sin numeración, viñetas ni comentarios adicionales."
+            )
+            response = ai_client.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=f"{prompt_sistema}\n\nPetición del usuario: {prompt_usuario}",
+                config=types.GenerateContentConfig(temperature=temperatura),
+            )
+            resultado_ia = response.text.strip()
+          except Exception as e:
+            st.error(f"Error al conectar con la Inteligencia Artificial: {e}")
+
+          if resultado_ia:
+            st.session_state["resultado_lista"] = resultado_ia
+            nuevo_nombre = prompt_usuario[:25] + "..."
+            if nuevo_nombre not in st.session_state["history_playlists"]:
+              st.session_state["history_playlists"].append(nuevo_nombre)
+            st.session_state["paso_actual"] = "revision"
+            st.rerun()
 
 # =====================================================================
-# FASE DE REVISIÓN Y EDICIÓN
+# PASO 2: REVISIÓN DE LA PLAYLIST & PREVISUALIZACIÓN DE AUDIO (OPCIÓN 5)
 # =====================================================================
 elif st.session_state["paso_actual"] == "revision":
   st.markdown(
-      "<h2 style='font-size: 18px; margin-bottom: 6px;'>Revisión de la playlist</h2>",
+      "<h2 style='font-size: 18px; margin-bottom: 6px;'>Revisión y Previsualización"
+      " de Audio</h2>",
       unsafe_allow_html=True,
   )
   st.markdown(
-      "<p>Puedes revisar, editar o descartar canciones de tu playlist antes de exportarla a Spotify.</p>",
+      "<p>Escucha fragmentos de 30 segundos, edita o descarta canciones antes"
+      " de exportarlas a Spotify.</p>",
       unsafe_allow_html=True,
   )
 
+  # Caja de edición de texto plano
   st.session_state["resultado_lista"] = st.text_area(
       "Canciones (Artista - Canción):",
       value=st.session_state["resultado_lista"],
-      height=200,
+      height=160,
       key="editable_result_box",
   )
+
+  # Bloque de Previsualización de Audio Integrada (Opción 5)
+  st.markdown("<div style='margin: 14px 0;'></div>", unsafe_allow_html=True)
+  st.markdown(
+      "<h3 style='font-size: 15px; color: #1DB954 !important;'>🎧 Previsualización"
+      " de pistas (Previews)</h3>",
+      unsafe_allow_html=True,
+  )
+
+  if CLIENT_ID != "TU_CLIENT_ID_REAL":
+    try:
+      auth_manager = SpotifyOAuth(
+          client_id=CLIENT_ID,
+          client_secret=CLIENT_SECRET,
+          redirect_uri=REDIRECT_URI,
+          scope="playlist-modify-public",
+          cache_path=None,
+          show_dialog=False,
+      )
+      sp = spotipy.Spotify(auth_manager=auth_manager)
+      lines_preview = [
+          l.strip()
+          for l in st.session_state["resultado_lista"].splitlines()
+          if l.strip()
+      ][:6]  # Muestra previews de las primeras 6 pistas para mantener la fluidez
+
+      for idx, track_query in enumerate(lines_preview):
+        res = sp.search(q=track_query, type="track", limit=1)
+        items = res["tracks"]["items"]
+        if items and items[0].get("preview_url"):
+          t_name = items[0]["name"]
+          a_name = items[0]["artists"][0]["name"]
+          p_url = items[0]["preview_url"]
+          st.markdown(
+              f"<p style='font-size: 12px; margin-bottom: 2px; color:#FFFFFF;'>"
+              f"<b>{idx+1}. {a_name} - {t_name}</b></p>",
+              unsafe_allow_html=True,
+          )
+          st.audio(p_url)
+        else:
+          st.markdown(
+              f"<p style='font-size: 12px; color:#727272;'>{idx+1}. {track_query}"
+              " (Audio preview no disponible en Spotify)</p>",
+              unsafe_allow_html=True,
+          )
+    except Exception:
+      st.markdown(
+          "<p style='font-size: 12px; color:#727272;'>Configura tus credenciales"
+          " de Spotify para habilitar los previews de audio.</p>",
+          unsafe_allow_html=True,
+      )
+  else:
+    st.markdown(
+        "<p style='font-size: 12px; color:#727272;'>Los previews de audio de"
+        " Spotify se activarán al configurar tus credenciales reales en el"
+        " código.</p>",
+        unsafe_allow_html=True,
+    )
+
+  st.markdown("<div style='margin: 14px 0;'></div>", unsafe_allow_html=True)
 
   col_r1, col_r2 = st.columns(2)
   with col_r1:
     if st.button("Atrás", use_container_width=True):
       st.session_state["paso_actual"] = "creacion"
-      st.session_state["resultado_lista"] = ""
+      st.session_state["modo_creacion"] = None
       st.rerun()
   with col_r2:
     if st.button("Continuar a exportar", type="primary", use_container_width=True):
@@ -471,7 +545,7 @@ elif st.session_state["paso_actual"] == "revision":
       st.rerun()
 
 # =====================================================================
-# BLOQUE DE EXPORTACIÓN A SPOTIFY & MENSAJE FINAL
+# PASO 3: EXPORTACIÓN A SPOTIFY Y MENSAJE FINAL
 # =====================================================================
 elif st.session_state["paso_actual"] == "exportacion":
   st.markdown(
@@ -562,11 +636,13 @@ elif st.session_state["paso_actual"] == "exportacion":
 
 elif st.session_state["paso_actual"] == "exito":
   st.markdown(
-      "<h2 style='font-size: 20px; color: #1DB954 !important;'>¡Playlist creada con éxito!</h2>",
+      "<h2 style='font-size: 20px; color: #1DB954 !important;'>¡Playlist"
+      " creada con éxito!</h2>",
       unsafe_allow_html=True,
   )
   st.markdown(
-      "<p>Tu nueva playlist ya está disponible y sincronizada en tu cuenta de Spotify.</p>",
+      "<p>Tu nueva playlist ya está disponible y sincronizada en tu cuenta de"
+      " Spotify.</p>",
       unsafe_allow_html=True,
   )
 
@@ -595,7 +671,6 @@ elif st.session_state["paso_actual"] == "exito":
   with col_e1:
     if st.button("Finalizar", use_container_width=True):
       st.session_state["resultado_lista"] = ""
-      st.session_state["prompt_input"] = ""
       st.session_state["paso_actual"] = "creacion"
       st.rerun()
   with col_e2:
@@ -603,6 +678,5 @@ elif st.session_state["paso_actual"] == "exito":
         "Crear una nueva playlist", type="primary", use_container_width=True
     ):
       st.session_state["resultado_lista"] = ""
-      st.session_state["prompt_input"] = ""
       st.session_state["paso_actual"] = "creacion"
       st.rerun()
