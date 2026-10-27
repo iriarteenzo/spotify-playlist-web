@@ -9,7 +9,6 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from google import genai
 from google.genai import types
-from openai import OpenAI
 
 
 # =========================================================
@@ -23,7 +22,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
+# Usamos gemini-1.5-flash que es sumamente estable y rápido para producción
+DEFAULT_MODEL = "gemini-1.5-flash"
 SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private"
 
 
@@ -35,7 +35,7 @@ def get_secret(key, default=""):
 
 
 GEMINI_API_KEY = get_secret("GEMINI_API_KEY")
-GEMINI_MODEL = get_secret("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
+GEMINI_MODEL = get_secret("GEMINI_MODEL", DEFAULT_MODEL)
 
 SPOTIFY_CLIENT_ID = get_secret("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = get_secret("SPOTIFY_CLIENT_SECRET")
@@ -390,30 +390,29 @@ def spotify_connect_button():
 
 
 # =========================================================
-# GENERACIÓN CON FALLBACK AUTOMÁTICO (PUTER -> GEMINI)
+# GENERACIÓN CON GEMINI DIRECTO Y ROBUSTO
 # =========================================================
 
-def _call_puter(instructions, prompt, temperature):
-    client = OpenAI(
-        base_url="https://api.puter.com/v1",
-        api_key="puter_free_session"
-    )
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": instructions},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=temperature,
-        response_format={"type": "json_object"}
-    )
-    return response.choices[0].message.content
-
-
-def _call_gemini(instructions, prompt, temperature):
+def generate_tracks(prompt, count, artist_count, temperature):
     if not GEMINI_API_KEY:
-        raise ValueError("Sin GEMINI_API_KEY")
+        raise ValueError("Falta configurar GEMINI_API_KEY en los Secrets.")
+
     client = genai.Client(api_key=GEMINI_API_KEY)
+
+    instructions = f"""
+Actúa como curador musical experto.
+
+Devuelve únicamente JSON válido con esta estructura exacta:
+{{"tracks":[{{"artist":"artista","title":"canción"}}]}}
+
+Genera {count} canciones reales y distintas de aproximadamente
+{artist_count} artistas diferentes.
+
+Respeta el género, época, idioma, ambiente, referencias y exclusiones
+del usuario. No inventes canciones. Evita duplicados.
+No incluyas explicaciones ni texto adicional fuera del JSON.
+"""
+
     response = client.models.generate_content(
         model=GEMINI_MODEL,
         contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
@@ -422,47 +421,11 @@ def _call_gemini(instructions, prompt, temperature):
             response_mime_type="application/json",
         ),
     )
-    return response.text
-
-
-def generate_tracks(prompt, count, artist_count, temperature):
-    instructions = f"""
-Actúa como curador musical experto.
-
-Devuelve únicamente JSON válido con esta estructura:
-{{"tracks":[{{"artist":"artista","title":"canción"}}]}}
-
-Genera {count} canciones reales y distintas de aproximadamente
-{artist_count} artistas diferentes.
-
-Respeta el género, época, idioma, ambiente, referencias y exclusiones
-del usuario. No inventes canciones. Evita duplicados.
-No incluyas explicaciones ni Markdown.
-"""
-
-    # Pipeline con fallback automático: Primero Puter.com, luego Gemini
-    pipeline = [("Puter.com", _call_puter), ("Gemini", _call_gemini)]
-
-    response_text = None
-    last_errors = []
-
-    for name, func in pipeline:
-        try:
-            response_text = func(instructions, prompt, temperature)
-            if response_text:
-                st.toast(f"Generado con éxito usando {name}", icon="✨")
-                break
-        except Exception as err:
-            last_errors.append(f"{name}: {err}")
-            continue
-
-    if not response_text:
-        raise ValueError("Todos los proveedores fallaron. Detalle:\n" + " | ".join(last_errors))
 
     try:
-        data = json.loads(response_text or "")
+        data = json.loads(response.text or "")
     except json.JSONDecodeError as exc:
-        raise ValueError("Respuesta JSON no válida de la IA.") from exc
+        raise ValueError("Gemini devolvió una respuesta no válida.") from exc
 
     tracks = []
     seen = set()
