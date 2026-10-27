@@ -862,3 +862,353 @@ with st.sidebar:
 
     st.markdown('<div class="sidebar-label">Historial reciente</div>',
                 unsafe_allow_html=True)
+
+    if not st.session_state.history:
+        st.caption("Tus playlists aparecerán aquí.")
+    else:
+        for item in reversed(st.session_state.history[-10:]):
+            if st.button(item["name"], key=f'history_{item["id"]}',
+                         use_container_width=True):
+                st.session_state.playlist_name = item["name"]
+                st.session_state.playlist_url = item["url"]
+                st.session_state.step = "success"
+                st.rerun()
+
+    st.divider()
+
+    st.markdown('<div class="sidebar-label">Spotify</div>',
+                unsafe_allow_html=True)
+
+    if spotify_client():
+        st.markdown(
+            '<p style="color:#1ED760;font-size:13px;font-weight:600">'
+            '● Conectado</p>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Desconectar", use_container_width=True):
+            st.session_state.pop("spotify_token", None)
+            st.rerun()
+    else:
+        spotify_connect_button()
+
+    provider = st.session_state.get("ai_provider", "Gemini")
+    if provider == "Gemini" and not GEMINI_API_KEY:
+        st.warning("Falta GEMINI_API_KEY en Secrets.")
+    elif provider == "OpenAI" and not OPENAI_API_KEY:
+        st.warning("Falta OPENAI_API_KEY en Secrets.")
+    elif provider == "Puter (OpenAI Gratis)" and not PUTER_API_KEY:
+        st.warning("Falta PUTER_API_KEY en Secrets.")
+
+
+# =========================================================
+# CREAR PLAYLIST
+# =========================================================
+
+if st.session_state.step == "create":
+    brand()
+
+    st.markdown(
+        '<div class="eyebrow">Descubrimiento musical con IA</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.title("¿Qué quieres escuchar?")
+
+    st.markdown(
+        '<p class="muted">Describe un género, una época, un ambiente '
+        'o una mezcla musical. Nosotros preparamos la selección.</p>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="composer">', unsafe_allow_html=True)
+
+    st.text_area(
+        "Petición musical",
+        key="prompt_input",
+        height=120,
+        placeholder=(
+            "Ej.: Rock alternativo de los 2000, oscuro y enérgico, "
+            "con clásicos y grupos menos conocidos. Sin baladas."
+        ),
+        label_visibility="collapsed",
+    )
+
+    left, right = st.columns(2, gap="medium")
+
+    with left:
+        if st.button("⚙   Ajustes", key="adjust_button",
+                     use_container_width=True):
+            settings_dialog()
+
+    with right:
+        generate = st.button(
+            "Generar playlist   ↗",
+            key="generate_button",
+            type="primary",
+            use_container_width=True,
+        )
+
+    st.markdown(
+        '<p class="muted" style="font-size:12px;margin:12px 2px 0">'
+        'Puedes revisar y editar las canciones antes de exportarlas.</p>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if generate:
+        prompt = st.session_state.prompt_input.strip()
+        provider = st.session_state.get("ai_provider", "Gemini")
+
+        if not prompt:
+            st.warning("Describe qué música quieres escuchar.")
+        elif provider == "Gemini" and not GEMINI_API_KEY:
+            st.error("Configura GEMINI_API_KEY en los Secrets.")
+        elif provider == "OpenAI" and not OPENAI_API_KEY:
+            st.error("Configura OPENAI_API_KEY en los Secrets.")
+        elif provider == "Puter (OpenAI Gratis)" and not PUTER_API_KEY:
+            st.error("Configura PUTER_API_KEY en los Secrets.")
+        else:
+            try:
+                with st.spinner(f"Creando tu selección musical con {provider}…"):
+                    tracks = generate_tracks(
+                        prompt,
+                        st.session_state.count,
+                        st.session_state.artist_count,
+                        st.session_state.temperature,
+                    )
+
+                st.session_state.tracks = tracks
+                st.session_state.step = "review"
+                st.rerun()
+
+            except Exception as exc:
+                st.error(f"No se pudo generar la selección: {exc}")
+
+
+# =========================================================
+# REVISAR CANCIONES
+# =========================================================
+
+elif st.session_state.step == "review":
+    brand()
+
+    st.markdown('<div class="eyebrow">Paso 1 · Revisión</div>',
+                unsafe_allow_html=True)
+    st.title("Tu selección musical")
+
+    st.markdown(
+        f'<p class="muted">{len(st.session_state.tracks)} canciones. '
+        'Edita la lista antes de buscarlas en Spotify.</p>',
+        unsafe_allow_html=True,
+    )
+
+    st.text_area(
+        "Artista - Canción (una por línea)",
+        value="\n".join(
+            f'{t["artist"]} - {t["title"]}'
+            for t in st.session_state.tracks
+        ),
+        height=330,
+        key="review_text",
+    )
+
+    left, right = st.columns(2, gap="medium")
+
+    with left:
+        if st.button("← Volver", use_container_width=True):
+            st.session_state.step = "create"
+            st.rerun()
+
+    with right:
+        search_clicked = st.button(
+            "Buscar en Spotify   ↗",
+            type="primary",
+            use_container_width=True,
+        )
+
+    if search_clicked:
+        edited = []
+
+        for line in st.session_state.review_text.splitlines():
+            match = __import__("re").match(
+                r"^\s*(.+?)\s+[–—-]\s+(.+?)\s*$",
+                line,
+            )
+            if match:
+                edited.append({
+                    "artist": match.group(1).strip(),
+                    "title": match.group(2).strip(),
+                })
+
+        if not edited:
+            st.warning("Usa el formato Artista - Canción.")
+        elif not spotify_client():
+            st.warning("Conecta Spotify desde la barra lateral.")
+        else:
+            found, missing = find_spotify_tracks(spotify_client(), edited)
+            st.session_state.resolved = found
+            st.session_state.missing = missing
+            st.session_state.step = "export"
+            st.rerun()
+
+
+# =========================================================
+# EXPORTAR A SPOTIFY
+# =========================================================
+
+elif st.session_state.step == "export":
+    brand()
+
+    st.markdown('<div class="eyebrow">Paso 2 · Exportación</div>',
+                unsafe_allow_html=True)
+    st.title("Revisa las coincidencias")
+
+    resolved = st.session_state.resolved
+    missing = st.session_state.missing
+
+    st.markdown(
+        f'<p class="muted">{len(resolved)} encontradas · '
+        f'{len(missing)} sin coincidencia.</p>',
+        unsafe_allow_html=True,
+    )
+
+    for i, track in enumerate(resolved, 1):
+        title = html.escape(track["title"])
+        artist = html.escape(track["artist"])
+        album = html.escape(track["album"])
+        url = html.escape(track["url"], quote=True)
+
+        st.markdown(
+            f'<div class="track-row">'
+            f'<div class="track-index">{i:02}</div>'
+            f'<div class="track-info">'
+            f'<div class="track-title">{title}</div>'
+            f'<div class="track-artist">{artist}</div>'
+            f'<div class="track-album">{album}</div>'
+            f'</div>'
+            f'<a class="track-link" href="{url}" target="_blank" '
+            f'rel="noopener">Abrir {icon("external", 13)}</a>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    if missing:
+        with st.expander(f"Canciones no encontradas ({len(missing)})"):
+            for track in missing:
+                st.write(f'{track["artist"]} - {track["title"]}')
+
+    st.divider()
+
+    with st.form("export_form"):
+        name = st.text_input(
+            "Nombre de la playlist",
+            value="Mi playlist con pl(ai)lister",
+            max_chars=100,
+        )
+        privacy = st.radio("Privacidad", ["Privada", "Pública"],
+                           horizontal=True)
+        description = st.text_input(
+            "Descripción",
+            value="Creada con pl(ai)lister y la IA",
+            max_chars=300,
+        )
+        submitted = st.form_submit_button(
+            "Crear playlist en Spotify",
+            type="primary",
+            use_container_width=True,
+        )
+
+    left, right = st.columns(2, gap="medium")
+
+    with left:
+        if st.button("← Volver", use_container_width=True):
+            st.session_state.step = "review"
+            st.rerun()
+
+    with right:
+        if st.button("Cancelar", use_container_width=True):
+            reset_app()
+            st.rerun()
+
+    if submitted:
+        sp = spotify_client()
+
+        if not sp:
+            st.error("Conecta Spotify antes de exportar.")
+        elif not resolved:
+            st.error("No hay canciones encontradas para exportar.")
+        elif not name.strip():
+            st.error("Escribe un nombre para la playlist.")
+        else:
+            try:
+                user = sp.current_user()
+                playlist = sp.user_playlist_create(
+                    user=user["id"],
+                    name=name.strip(),
+                    public=(privacy == "Pública"),
+                    description=description.strip(),
+                )
+
+                uris = [track["uri"] for track in resolved]
+                for start in range(0, len(uris), 100):
+                    sp.playlist_add_items(
+                        playlist["id"],
+                        uris[start:start + 100],
+                    )
+
+                playlist_url = playlist.get(
+                    "external_urls", {}
+                ).get("spotify", "")
+
+                st.session_state.playlist_name = name.strip()
+                st.session_state.playlist_url = playlist_url
+                st.session_state.history.append({
+                    "id": playlist["id"],
+                    "name": name.strip(),
+                    "url": playlist_url,
+                })
+                st.session_state.step = "success"
+                st.rerun()
+
+            except Exception as exc:
+                st.error(f"No se pudo crear la playlist: {exc}")
+
+
+# =========================================================
+# CONFIRMACIÓN
+# =========================================================
+
+elif st.session_state.step == "success":
+    brand()
+
+    st.markdown('<div class="eyebrow">Completado</div>',
+                unsafe_allow_html=True)
+    st.title("Playlist creada")
+
+    name = html.escape(
+        st.session_state.get("playlist_name", "Tu playlist")
+    )
+
+    st.markdown(
+        f'<div class="result-card">'
+        f'<div style="color:#1ED760;margin-bottom:12px">'
+        f'{icon("check", 24)}</div>'
+        f'<div style="font-size:20px;font-weight:600">{name}</div>'
+        f'<p class="muted">Tu selección está lista en Spotify.</p>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    url = st.session_state.get("playlist_url", "")
+    if url:
+        st.link_button(
+            "Abrir playlist en Spotify   ↗",
+            url,
+            type="primary",
+            use_container_width=True,
+        )
+
+    if st.button("＋ Crear otra playlist", use_container_width=True):
+        reset_app()
+        st.rerun()
