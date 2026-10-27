@@ -17,12 +17,10 @@ REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.ap
 # =====================================================================
 # CONFIGURACIÓN DE PÁGINA (Favicon ajustado al badge AI)
 # =====================================================================
-st.set_page_config(
-    page_title="pl(ai)lister", page_icon="🟢", layout="centered"
-)
+st.set_page_config(page_title="pl(ai)lister", page_icon="🟢", layout="centered")
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - CORRECCIONES APLICADAS)
+# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - CORREGIDO UPLOAD Y SIDEBAR)
 # =====================================================================
 st.markdown(
     """
@@ -37,7 +35,7 @@ st.markdown(
         font-family: 'Google Sans', Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
-    /* Barra lateral en negro absoluto y ocultar texto residual superior */
+    /* Barra lateral en negro absoluto y limpieza de textos residuales */
     section[data-testid="stSidebar"] {
         background-color: #000000;
         border-right: 1px solid #282828;
@@ -52,10 +50,9 @@ st.markdown(
     section[data-testid="stSidebar"] h3 {
         color: #FFFFFF !important;
     }
-    /* Ocultar texto "keyboard_double_..." o iconos residuales superiores en la barra lateral */
-    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] span,
-    section[data-testid="stSidebar"] header {
-        display: none !important;
+    /* Ocultar elementos flotantes no deseados en la cabecera del sidebar */
+    section[data-testid="stSidebar"] [data-testid="stDecoration"] {
+        display: none;
     }
 
     /* Logo con ondas AI (Minúscula y centrado vertical perfecto en línea) */
@@ -202,7 +199,7 @@ st.markdown(
         background-color: #1DB954 !important;
     }
 
-    /* Corrección del File Uploader (Evitar texto duplicado y aplicar diseño limpio) */
+    /* Corrección limpia del File Uploader (Evita texto duplicado y añade icono/estilo correcto) */
     div[data-testid="stFileUploader"] {
         background-color: #181818;
         border: 1px dashed #3E3E3E;
@@ -213,15 +210,19 @@ st.markdown(
         background-color: #d6d6d6 !important;
         border: none !important;
     }
+    /* Ocultar el texto duplicado nativo y estilizar el botón de subida */
+    div[data-testid="stFileUploader"] section div {
+        color: transparent;
+    }
     div[data-testid="stFileUploader"] button {
         color: #3e3e3e !important;
         font-weight: 700 !important;
         font-family: 'Google Sans', Helvetica, sans-serif;
+        background-color: #FFFFFF !important;
+        border: 1px solid #CCCCCC !important;
+        border-radius: 6px !important;
     }
-    /* Ocultar etiquetas duplicadas internas de Streamlit en el uploader */
-    div[data-testid="stFileUploader"] section div div span {
-        display: none !important;
-    }
+    div[data-testid="stFileUploader"] span, 
     div[data-testid="stFileUploader"] small {
         color: #555555 !important;
         font-family: 'Google Sans', Helvetica, sans-serif;
@@ -262,7 +263,7 @@ if "resultado_lista" not in st.session_state:
   st.session_state["resultado_lista"] = ""
 
 # =====================================================================
-# BARRA LATERAL (SIDEBAR)
+# BARRA LATERAL (SIDEBAR CON BADGE AI EN MINÚSCULA)
 # =====================================================================
 with st.sidebar:
   st.markdown(
@@ -316,7 +317,7 @@ with st.sidebar:
   )
 
 # =====================================================================
-# PANTALLA PRINCIPAL
+# PANTALLA PRINCIPAL (HERO TITLE CON BADGE AI EN MINÚSCULA)
 # =====================================================================
 st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
@@ -355,6 +356,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Campo de texto principal
 prompt_usuario = st.text_area(
     "Describe la música que deseas generar:",
     value="",
@@ -362,6 +364,7 @@ prompt_usuario = st.text_area(
     key="main_prompt_box",
 )
 
+# Parámetros avanzados
 col_p1, col_p2, col_p3 = st.columns(3)
 with col_p1:
   num_canciones = st.slider(
@@ -376,6 +379,7 @@ with col_p3:
 
 st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
 
+# Botón de Generación Directa actualizado al modelo gemini-3.8-flash
 if st.button("Generar playlist", type="primary", use_container_width=True):
   if not prompt_usuario.strip():
     st.error(
@@ -415,6 +419,7 @@ if st.button("Generar playlist", type="primary", use_container_width=True):
       except Exception as e:
         st.error(f"Error al conectar con la inteligencia artificial: {e}")
 
+# Visualización y edición de la playlist generada por IA
 if st.session_state["resultado_lista"]:
   st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
   st.markdown(
@@ -440,7 +445,7 @@ if st.session_state["resultado_lista"]:
 st.markdown("<div style='margin: 36px 0;'></div>", unsafe_allow_html=True)
 
 # =====================================================================
-# OPCIÓN ALTERNATIVA: SUBIR TXT Y ENVIAR A SPOTIFY
+# OPCIÓN ALTERNATIVA: SUBIR TXT Y ENVIAR A Spotify
 # =====================================================================
 st.markdown(
     "<h2 style='font-size: 22px; margin-bottom: 6px;'>Exportar a Spotify</h2>",
@@ -463,16 +468,13 @@ tipo_origen = st.radio(
 
 uploaded_file = None
 if tipo_origen == "Subir un archivo":
+  # Lógica dinámica: cambia el texto del botón según si ya se cargó el archivo o no
   label_uploader = (
-      "⬆️ Subir archivo"
-      if st.session_state.get("archivo_cargado_previo")
-      else "📁 Seleccionar archivo"
+      "📂 Subir archivo" if "uploaded_file" in locals() and uploaded_file else "📁 Seleccionar archivo"
   )
   uploaded_file = st.file_uploader(
-      label_uploader, type=["txt"], key="custom_uploader"
+      label_uploader, type=["txt"]
   )
-  if uploaded_file:
-    st.session_state["archivo_cargado_previo"] = True
 
 nombre_playlist = st.text_input(
     "Nombre de la playlist en Spotify", value="Mi nueva playlist"
