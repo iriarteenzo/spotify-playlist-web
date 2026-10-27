@@ -12,23 +12,28 @@ import streamlit as st
 CLIENT_ID = "ce6c0302d9b147aabdcd3f8f4a62bab0"
 CLIENT_SECRET = "ce6c0302d9b147aabdcd3f8f4a62bab0"
 REDIRECT_URI = "https://spotify-playlist-web-ktnmkfkhdjehk7qzx4eoxq.streamlit.app/"  # O pon http://localhost:8888 si lo pruebas en local
-# =====================================================================
 
+# =====================================================================
+# CONFIGURACIÓN DE PÁGINA (Favicon con el badge AI)
+# =====================================================================
 st.set_page_config(
-    page_title="plAIlister", page_icon="P", layout="centered"
+    page_title="plAIlister", page_icon="🟢", layout="centered"
 )
 
 # =====================================================================
-# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - CORREGIDO DEFINITIVO)
+# ESTILOS CSS UX/UI (AI STYLE & SPOTIFY DARK - TIPOGRAFÍA Y CENTRADO)
 # =====================================================================
 st.markdown(
     """
     <style>
-    /* Fondo general de la aplicación */
+    /* Importar Google Sans desde Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&display=swap');
+
+    /* Fondo general de la aplicación y nueva tipografía */
     .stApp {
         background-color: #121212;
         color: #FFFFFF;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: 'Google Sans', Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
     /* Barra lateral en negro absoluto */
@@ -41,22 +46,25 @@ st.markdown(
     section[data-testid="stSidebar"] label,
     section[data-testid="stSidebar"] h3 {
         color: #B3B3B3 !important;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     section[data-testid="stSidebar"] h3 {
         color: #FFFFFF !important;
     }
 
-    /* Logo con ondas AI */
+    /* Logo con ondas AI (Minúscula y centrado vertical/horizontal perfecto) */
     .logo-container {
         display: flex;
         align-items: center;
-        gap: 4px;
+        justify-content: flex-start;
+        gap: 6px;
         font-size: 32px;
         font-weight: 800;
         letter-spacing: -0.5px;
         color: #FFFFFF;
         margin-bottom: 24px;
         padding-top: 10px;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .ai-wave-badge {
         display: inline-flex;
@@ -64,13 +72,15 @@ st.markdown(
         justify-content: center;
         border: 2px solid #1DB954;
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        font-size: 24px;
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
         color: #1DB954;
-        font-weight: 900;
+        font-weight: 800;
         background-color: rgba(29, 185, 84, 0.1);
         box-shadow: 0 0 12px rgba(29, 185, 84, 0.4);
+        line-height: 1;
+        vertical-align: middle;
     }
 
     /* Hero Section Minimalista */
@@ -86,13 +96,16 @@ st.markdown(
         margin-bottom: 4px;
         display: flex;
         align-items: center;
-        gap: 4px;
+        justify-content: flex-start;
+        gap: 6px;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .hero-subtitle {
         font-size: 18px;
         color: #1DB954;
         font-weight: 600;
         margin-bottom: 12px;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
 
     /* Tarjetas estáticas visibles */
@@ -108,11 +121,13 @@ st.markdown(
         font-weight: 700;
         color: #FFFFFF;
         margin-bottom: 4px;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .feature-desc {
         font-size: 15px;
         color: #B3B3B3;
         line-height: 1.4;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
 
     /* BOTONES PRIMARIOS: Verde Spotify con TEXTO NEGRO PURO */
@@ -125,6 +140,7 @@ st.markdown(
         border: none !important;
         padding: 12px 28px !important;
         box-shadow: 0 4px 14px rgba(29, 185, 84, 0.4);
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .stButton>button[kind="primary"] p,
     .stButton>button[kind="primary"] span {
@@ -143,6 +159,7 @@ st.markdown(
         border-radius: 500px;
         font-weight: 500;
         padding: 8px 18px;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .stButton>button:hover {
         border-color: #FFFFFF;
@@ -163,6 +180,7 @@ st.markdown(
         padding: 12px;
         font-size: 15px;
         font-weight: 500 !important;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .stTextInput input:focus, 
     .stTextArea textarea:focus {
@@ -191,22 +209,93 @@ st.markdown(
     div[data-testid="stFileUploader"] button {
         color: #3e3e3e !important;
         font-weight: 700 !important;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     div[data-testid="stFileUploader"] span, 
     div[data-testid="stFileUploader"] small {
         color: #555555 !important;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
 
     h1, h2, h3 {
         color: #FFFFFF !important;
         font-weight: 700;
         letter-spacing: -0.5px;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     p, label {
         color: #B3B3B3 !important;
         font-size: 14px;
+        font-family: 'Google Sans', Helvetica, sans-serif;
     }
     </style>
+""",
+    unsafe_allow_html=True,
+)
+
+# =====================================================================
+# BARRA LATERAL (SIDEBAR CON BADGE AI EN MINÚSCULA)
+# =====================================================================
+with st.sidebar:
+  st.markdown(
+      """
+        <div class="logo-container">
+            pl<div class="ai-wave-badge">ai</div>lister
+        </div>
+    """,
+      unsafe_allow_html=True,
+  )
+
+  st.markdown("---")
+  st.markdown(
+      "<h3 style='font-size: 15px; text-transform: uppercase; letter-spacing:"
+      " 1px;'>Últimas playlists</h3>",
+      unsafe_allow_html=True,
+  )
+
+  limit_display = (
+      len(st.session_state["history_playlists"])
+      if st.session_state["show_all_history"]
+      else min(5, len(st.session_state["history_playlists"]))
+  )
+  recent_playlists = st.session_state["history_playlists"][::-1][
+      :limit_display
+  ]
+
+  for pl in recent_playlists:
+    st.markdown(
+        f"<p style='color: #FFFFFF; font-size: 14px; margin: 8px 0; font-weight:"
+        f" 500;'>• {pl}</p>",
+        unsafe_allow_html=True,
+    )
+
+  if len(st.session_state["history_playlists"]) > 5:
+    if st.button(
+        "Ver más" if not st.session_state["show_all_history"] else "Ver menos",
+        key="btn_ver_mas",
+        use_container_width=True,
+    ):
+      st.session_state["show_all_history"] = not st.session_state[
+          "show_all_history"
+      ]
+      st.rerun()
+
+  st.markdown("---")
+  st.markdown(
+      "<p style='font-size: 12px; color: #727272;'>Conectado a Spotify API"
+      " & Google GenAI</p>",
+      unsafe_allow_html=True,
+  )
+
+# =====================================================================
+# PANTALLA PRINCIPAL (HERO TITLE CON BADGE AI EN MINÚSCULA)
+# =====================================================================
+st.markdown('<div class="hero-container">', unsafe_allow_html=True)
+st.markdown(
+    """
+    <div class="hero-title">
+        pl<div class="ai-wave-badge" style="width: 36px; height: 36px; font-size: 16px;">ai</div>lister Studio
+    </div>
 """,
     unsafe_allow_html=True,
 )
