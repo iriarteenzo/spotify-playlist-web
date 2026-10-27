@@ -45,20 +45,12 @@ SPOTIFY_REDIRECT_URI = get_secret(
     "http://localhost:8501",
 ).rstrip("/")
 
-
+# ---------- Design System & Estilos Dinámicos (Modo Claro / Oscuro / Sistema) ----------
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
-
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
-
-/* --- 1. DESIGN SYSTEM: VARIABLES DINÁMICAS (DARK/LIGHT) --- */
+/* --- 1. VARIABLES DINÁMICAS (DARK / LIGHT / SISTEMA) --- */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #121212;
@@ -87,6 +79,32 @@ st.markdown("""
     --input-bg: #ffffff;
     --sidebar-bg: #f1f3f5;
   }
+}
+
+[data-theme="dark"] {
+  --bg: #121212;
+  --panel: #1a1a1a;
+  --panel-sub: #222222;
+  --panel-hover: #2a2a2a;
+  --border: #333333;
+  --border-focus: #555555;
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.60);
+  --input-bg: #181818;
+  --sidebar-bg: #0a0a0a;
+}
+
+[data-theme="light"] {
+  --bg: #f8f9fa;
+  --panel: #ffffff;
+  --panel-sub: #f1f3f5;
+  --panel-hover: #e9ecef;
+  --border: #dee2e6;
+  --border-focus: #adb5bd;
+  --text: #212529;
+  --muted: #6c757d;
+  --input-bg: #ffffff;
+  --sidebar-bg: #f1f3f5;
 }
 
 :root {
@@ -180,15 +198,17 @@ p, label, input, textarea, button {
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
 }
 
-.st-key-prompt_shell textarea, div[data-testid="stTextInput"] input {
+.st-key-prompt_shell textarea {
+  min-height: 140px !important;
   background: var(--input-bg) !important;
   border: 1px solid var(--border) !important;
   border-radius: 12px !important;
   color: var(--text) !important;
   font-size: 15px !important;
+  padding: 14px !important;
 }
 
-.st-key-prompt_shell textarea:focus, div[data-testid="stTextInput"] input:focus {
+.st-key-prompt_shell textarea:focus {
   border-color: var(--green) !important;
   box-shadow: 0 0 0 1px var(--green) !important;
 }
@@ -281,56 +301,17 @@ section[data-testid="stSidebar"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ============================================================
-# 3. ICONOGRAFÍA SVG
-# ============================================================
-
-ICONS = {
-    "sliders": (
-        '<path d="M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3"/>'
-        '<path d="M2 14h4m4-6h4m4 8h4"/>'
-    ),
-    "send": (
-        '<path d="m22 2-7 20-4-9-9-4Z"/>'
-        '<path d="M22 2 11 13"/>'
-    ),
-    "check": '<path d="m5 12 4 4L19 6"/>',
-    "external": (
-        '<path d="M15 3h6v6"/>'
-        '<path d="M10 14 21 3"/>'
-        '<path d="M19 13v6a2 2 0 0 1-2 2H5'
-        'a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/>'
-    ),
-    "spotify": (
-        '<circle cx="12" cy="12" r="10" fill="#1ED760" stroke="none"/>'
-        '<path d="M6.5 9.2c3.9-1.2 8.5-.8 11.2 1"'
-        ' stroke="#07150B" stroke-width="1.7"/>'
-        '<path d="M7.2 12.2c3.2-1 7-.6 9.4 1"'
-        ' stroke="#07150B" stroke-width="1.5"/>'
-        '<path d="M7.8 15c2.7-.7 5.5-.4 7.5.8"'
-        ' stroke="#07150B" stroke-width="1.4"/>'
-    ),
-}
-
-
-def svg_icon(name, size=18):
-    return (
-        f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" '
-        'fill="none" stroke="currentColor" stroke-width="1.7" '
-        'stroke-linecap="round" stroke-linejoin="round" '
-        'aria-hidden="true">'
-        f'{ICONS[name]}</svg>'
-    )
-
-
-def render_brand():
-    st.markdown(
-        '<div class="brand">pl'
-        '<span class="brand-ai">ai</span>lister</div>',
-        unsafe_allow_html=True,
-    )
-
-
+# ---------- Iconos SVG ----------
+def icon(name, size=18):
+    paths = {
+        "sliders": '<path d="M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3"/><path d="M2 14h4m4-6h4m4 8h4"/>',
+        "send": '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+        "music": '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+        "check": '<path d="m5 12 4 4L19 6"/>',
+        "external": '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/>',
+    }
+    return f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{paths[name]}</svg>'
+    
 # ============================================================
 # 4. SPOTIFY AUTHENTICATION
 # ============================================================
