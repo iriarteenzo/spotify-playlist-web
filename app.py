@@ -1,4 +1,5 @@
 import html
+import json
 import os
 import secrets
 import time
@@ -8,6 +9,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from google import genai
 from google.genai import types
+from openai import OpenAI
 
 
 # =========================================================
@@ -21,7 +23,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-DEFAULT_MODEL = "gemini-2.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
 SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private"
 
 
@@ -33,7 +36,11 @@ def get_secret(key, default=""):
 
 
 GEMINI_API_KEY = get_secret("GEMINI_API_KEY")
-GEMINI_MODEL = get_secret("GEMINI_MODEL", DEFAULT_MODEL)
+GEMINI_MODEL = get_secret("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
+
+OPENAI_API_KEY = get_secret("OPENAI_API_KEY")
+OPENAI_MODEL = get_secret("OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
+
 SPOTIFY_CLIENT_ID = get_secret("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = get_secret("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = get_secret(
@@ -274,7 +281,6 @@ input::placeholder {
     opacity: 1 !important;
 }
 
-/* Ocultar etiquetas flotantes duplicadas en text_area para evitar elementos fantasma */
 div[data-testid="stTextArea"] label {
     display: none !important;
 }
@@ -424,8 +430,6 @@ hr {
     border-color: #303030;
 }
 
-/* Adaptación móvil */
-
 @media (max-width: 760px) {
     .block-container {
         padding: 20px 16px 28px !important;
@@ -562,11 +566,11 @@ def spotify_connect_button():
 
 
 # =========================================================
-# GEMINI
+# GENERACIÓN DE CANCIONES (MULTI-LLM: GEMINI / OPENAI)
 # =========================================================
 
 def generate_tracks(prompt, count, artist_count, temperature):
-    client = genai.Client(api_key=GEMINI_API_KEY)
+    provider = st.session_state.get("ai_provider", "Gemini")
 
     instructions = f"""
 Actúa como curador musical experto.
@@ -582,21 +586,41 @@ del usuario. No inventes canciones. Evita duplicados.
 No incluyas explicaciones ni Markdown.
 """
 
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
-        config=types.GenerateContentConfig(
-            temperature=temperature,
-            response_mime_type="application/json",
-        ),
-    )
+    response_text = ""
 
-    import json
+    if provider == "Gemini":
+        if not GEMINI_API_KEY:
+            raise ValueError("Falta GEMINI_API_KEY en los Secrets.")
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
+            config=types.GenerateContentConfig(
+                temperature=temperature,
+                response_mime_type="application/json",
+            ),
+        )
+        response_text = response.text
+
+    elif provider == "OpenAI":
+        if not OPENAI_API_KEY:
+            raise ValueError("Falta OPENAI_API_KEY en los Secrets.")
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {"role": "system", "content": instructions},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=temperature,
+            response_format={"type": "json_object"}
+        )
+        response_text = response.choices[0].message.content
 
     try:
-        data = json.loads(response.text or "")
+        data = json.loads(response_text or "")
     except json.JSONDecodeError as exc:
-        raise ValueError("Gemini devolvió una respuesta no válida.") from exc
+        raise ValueError(f"{provider} devolvió una respuesta JSON no válida.") from exc
 
     tracks = []
     seen = set()
@@ -691,6 +715,7 @@ DEFAULTS = {
     "count": 15,
     "artist_count": 5,
     "temperature": 0.7,
+    "ai_provider": "Gemini",
     "history": [],
     "tracks": [],
     "resolved": [],
@@ -715,14 +740,20 @@ def reset_app():
 
 
 # =========================================================
-# MODAL DE AJUSTES
+# MODAL DE AJUSTES (Con selector de IA)
 # =========================================================
 
 @st.dialog("Ajustes de generación", width="small")
 def settings_dialog():
     st.markdown(
-        '<p class="muted">Personaliza tu selección musical.</p>',
+        '<p class="muted">Personaliza tu selección musical y el modelo de IA.</p>',
         unsafe_allow_html=True,
+    )
+
+    st.selectbox(
+        "Proveedor de IA",
+        options=["Gemini", "OpenAI"],
+        key="ai_provider",
     )
 
     st.slider("Cantidad de canciones", 5, 50, key="count")
@@ -837,8 +868,11 @@ with st.sidebar:
     else:
         spotify_connect_button()
 
-    if not GEMINI_API_KEY:
+    provider = st.session_state.get("ai_provider", "Gemini")
+    if provider == "Gemini" and not GEMINI_API_KEY:
         st.warning("Falta GEMINI_API_KEY en Secrets.")
+    elif provider == "OpenAI" and not OPENAI_API_KEY:
+        st.warning("Falta OPENAI_API_KEY en Secrets.")
 
 
 # =========================================================
@@ -899,14 +933,17 @@ if st.session_state.step == "create":
 
     if generate:
         prompt = st.session_state.prompt_input.strip()
+        provider = st.session_state.get("ai_provider", "Gemini")
 
         if not prompt:
             st.warning("Describe qué música quieres escuchar.")
-        elif not GEMINI_API_KEY:
+        elif provider == "Gemini" and not GEMINI_API_KEY:
             st.error("Configura GEMINI_API_KEY en los Secrets.")
+        elif provider == "OpenAI" and not OPENAI_API_KEY:
+            st.error("Configura OPENAI_API_KEY en los Secrets.")
         else:
             try:
-                with st.spinner("Creando tu selección musical…"):
+                with st.spinner(f"Creando tu selección musical con {provider}…"):
                     tracks = generate_tracks(
                         prompt,
                         st.session_state.count,
@@ -1046,7 +1083,7 @@ elif st.session_state.step == "export":
                            horizontal=True)
         description = st.text_input(
             "Descripción",
-            value="Creada con pl(ai)lister y Gemini",
+            value="Creada con pl(ai)lister y la IA",
             max_chars=300,
         )
         submitted = st.form_submit_button(
