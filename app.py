@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
 SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private"
 
 
@@ -390,23 +390,8 @@ def spotify_connect_button():
 
 
 # =========================================================
-# GENERACIÓN CON PUTER.COM Y GEMINI (FALLBACK)
+# GENERACIÓN CON FALLBACK AUTOMÁTICO (PUTER -> GEMINI)
 # =========================================================
-
-def _call_gemini(instructions, prompt, temperature):
-    if not GEMINI_API_KEY:
-        raise ValueError("Sin GEMINI_API_KEY")
-    client = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
-        config=types.GenerateContentConfig(
-            temperature=temperature,
-            response_mime_type="application/json",
-        ),
-    )
-    return response.text
-
 
 def _call_puter(instructions, prompt, temperature):
     client = OpenAI(
@@ -425,9 +410,22 @@ def _call_puter(instructions, prompt, temperature):
     return response.choices[0].message.content
 
 
-def generate_tracks(prompt, count, artist_count, temperature):
-    provider_preference = st.session_state.get("ai_provider", "Automático (Fallback)")
+def _call_gemini(instructions, prompt, temperature):
+    if not GEMINI_API_KEY:
+        raise ValueError("Sin GEMINI_API_KEY")
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=f"{instructions}\n\nPetición del usuario:\n{prompt}",
+        config=types.GenerateContentConfig(
+            temperature=temperature,
+            response_mime_type="application/json",
+        ),
+    )
+    return response.text
 
+
+def generate_tracks(prompt, count, artist_count, temperature):
     instructions = f"""
 Actúa como curador musical experto.
 
@@ -442,12 +440,8 @@ del usuario. No inventes canciones. Evita duplicados.
 No incluyas explicaciones ni Markdown.
 """
 
-    if provider_preference == "Puter.com":
-        pipeline = [("Puter.com", _call_puter), ("Gemini", _call_gemini)]
-    elif provider_preference == "Gemini":
-        pipeline = [("Gemini", _call_gemini), ("Puter.com", _call_puter)]
-    else:
-        pipeline = [("Puter.com", _call_puter), ("Gemini", _call_gemini)]
+    # Pipeline con fallback automático: Primero Puter.com, luego Gemini
+    pipeline = [("Puter.com", _call_puter), ("Gemini", _call_gemini)]
 
     response_text = None
     last_errors = []
@@ -542,7 +536,6 @@ DEFAULTS = {
     "count": 15,
     "artist_count": 5,
     "temperature": 0.7,
-    "ai_provider": "Automático (Fallback)",
     "history": [],
     "tracks": [],
     "resolved": [],
@@ -561,10 +554,13 @@ def reset_app():
     st.session_state.prompt = ""
 
 
+# =========================================================
+# MODAL DE AJUSTES
+# =========================================================
+
 @st.dialog("Ajustes de generación", width="small")
 def settings_dialog():
-    st.markdown('<p class="muted">Personaliza la selección musical y el motor de IA.</p>', unsafe_allow_html=True)
-    st.selectbox("Proveedor preferido", options=["Automático (Fallback)", "Puter.com", "Gemini"], key="ai_provider")
+    st.markdown('<p class="muted">Personaliza la selección musical.</p>', unsafe_allow_html=True)
     st.slider("Cantidad de canciones", 5, 50, key="count")
     st.slider("Cantidad de artistas", 1, 15, key="artist_count")
     st.markdown("**Creatividad**")
