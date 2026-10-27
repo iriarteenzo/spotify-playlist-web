@@ -292,14 +292,13 @@ st.markdown('<div class="hero-container">', unsafe_allow_html=True)
 st.markdown(
     """
     <div class="hero-title">
-        pl<span><div class="ai-wave-badge" style="width: 32px; height: 32px; font-size: 16px;">AI</div></span>lister Studio
+        pl<span><div class="ai-wave-badge" style="width: 32px; height: 32px; font-size: 16px;">AI</div></span>lister
     </div>
 """,
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<div class="hero-subtitle">Inteligencia artificial aplicada a la curación'
-    " musical con Spotify</div>",
+    '<div class="hero-subtitle">Genera playlists con IA y subelas a Spotify'"</div>",
     unsafe_allow_html=True,
 )
 
