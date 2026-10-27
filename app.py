@@ -95,7 +95,7 @@ st.markdown(
         font-weight: 800;
         color: #FFFFFF;
         letter-spacing: -1px;
-        margin-bottom: 4px;
+        margin-bottom: 8px;
         display: flex;
         align-items: center;
         justify-content: flex-start;
@@ -319,13 +319,7 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-st.markdown(
-    """
-    <div class="hero-subtitle">Genera playlists con IA y escuchalas en Spotify'
-     </div>
-""",
-    unsafe_allow_html=True,
-)
+
 st.markdown(
     """
     <div class="feature-card">
@@ -348,7 +342,7 @@ st.markdown(
 # BLOQUE DEL GENERADOR DE PLAYLISTS CON IA
 # =====================================================================
 st.markdown(
-    "<h2 style='font-size: 22px; margin-bottom: 16px;'>Generador de listas"
+    "<h2 style='font-size: 22px; margin-bottom: 12px;'>Generador de listas"
     " inteligente</h2>",
     unsafe_allow_html=True,
 )
