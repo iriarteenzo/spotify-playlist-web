@@ -1,3 +1,4 @@
+
 from google import genai
 from google.genai import types
 import re
@@ -25,7 +26,7 @@ st.set_page_config(
 )
 
 # =====================================================================
-# ESTILOS CSS UX/UI (MÁRGENES CUIDADOS Y CONTENEDOR ESTILO GEMINI)
+# ESTILOS CSS UX/UI (ESTILO EXACTO AI STUDIO PLAYGROUND)
 # =====================================================================
 st.markdown(
     """
@@ -38,20 +39,17 @@ st.markdown(
         font-family: 'Google Sans', Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
-    /* Márgenes y paddings globales óptimos para evitar cortes o bordes pegados */
     .block-container {
-        padding-top: 2rem !important;
-        padding-bottom: 3rem !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
-        max-width: 750px;
+        padding-top: 1.5rem !important;
+        padding-bottom: 2.5rem !important;
+        padding-left: 1.2rem !important;
+        padding-right: 1.2rem !important;
+        max-width: 720px;
     }
 
     section[data-testid="stSidebar"] {
         background-color: #000000;
         border-right: 1px solid #282828;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
     }
     section[data-testid="stSidebar"] p, 
     section[data-testid="stSidebar"] span, 
@@ -64,6 +62,7 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
+    /* Logo barra lateral */
     .logo-container-sidebar {
         display: flex;
         align-items: center;
@@ -74,7 +73,7 @@ st.markdown(
         letter-spacing: -0.5px;
         color: #FFFFFF;
         margin-bottom: 12px;
-        padding-top: 10px;
+        padding-top: 8px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .ai-wave-badge-sidebar {
@@ -95,17 +94,17 @@ st.markdown(
         flex-shrink: 0;
     }
 
-    /* Hero Section Compacto */
+    /* Hero Section Minimalista AI Studio */
     .hero-container {
         padding: 0px 0 10px 0;
         text-align: left;
     }
     .hero-title {
-        font-size: 32px;
+        font-size: 34px;
         font-weight: 800;
         color: #FFFFFF;
         letter-spacing: -1px;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
         display: flex;
         align-items: center;
         justify-content: flex-start;
@@ -131,36 +130,64 @@ st.markdown(
     }
 
     .feature-card {
-        background: rgba(255, 255, 255, 0.03);
-        padding: 12px 16px;
-        border-radius: 8px;
-        border-left: 3px solid #1DB954;
-        margin-bottom: 8px;
+        background: transparent;
+        padding: 6px 0;
+        margin-bottom: 6px;
     }
     .feature-title {
-        font-size: 14px;
-        font-weight: 700;
-        color: #FFFFFF;
-        margin-bottom: 3px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #E3E3E3;
+        margin-bottom: 2px;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .feature-desc {
-        font-size: 12px;
-        color: #B3B3B3;
-        line-height: 1.3;
+        font-size: 13px;
+        color: #9AA0A6;
+        line-height: 1.4;
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
 
-    /* Botones principales y secundarios */
+    /* CONTENEDOR DE TEXTAREA ESTILO AI STUDIO */
+    div[data-testid="stTextArea"] textarea {
+        background-color: #1E1E1E !important;
+        color: #FFFFFF !important;
+        border: 1px solid #333333 !important;
+        border-radius: 16px 16px 0px 0px !important;
+        padding: 16px !important;
+        font-size: 15px !important;
+        font-family: 'Google Sans', Helvetica, sans-serif;
+        resize: none !important;
+    }
+    div[data-testid="stTextArea"] textarea:focus {
+        border-color: #444444 !important;
+        box-shadow: none !important;
+    }
+
+    /* Barra inferior integrada dentro del bloque prompt */
+    .prompt-toolbar {
+        background-color: #1E1E1E;
+        border: 1px solid #333333;
+        border-top: none;
+        border-radius: 0px 0px 16px 16px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: -16px;
+        margin-bottom: 16px;
+    }
+
+    /* Botones de acción principales y secundarios */
     .stButton>button[kind="primary"] {
         background-color: #1DB954 !important;
         color: #000000 !important;
-        font-weight: 600 !important;
-        font-size: 15px !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
         border-radius: 500px !important;
         border: none !important;
-        padding: 10px 22px !important;
-        box-shadow: 0 4px 14px rgba(29, 185, 84, 0.4);
+        padding: 8px 20px !important;
+        box-shadow: 0 2px 10px rgba(29, 185, 84, 0.3);
         font-family: 'Google Sans', Helvetica, sans-serif;
     }
     .stButton>button[kind="primary"] p,
@@ -173,36 +200,18 @@ st.markdown(
     }
 
     .stButton>button {
-        background-color: #282828;
+        background-color: #2A2A2A;
         color: #FFFFFF !important;
         border: 1px solid #3E3E3E;
         border-radius: 500px;
         font-weight: 500;
-        padding: 8px 16px;
+        padding: 6px 14px;
         font-family: 'Google Sans', Helvetica, sans-serif;
         font-size: 13px;
     }
     .stButton>button:hover {
         border-color: #FFFFFF;
         background-color: #3E3E3E;
-    }
-
-    /* Inputs de texto estilo Gemini con bordes limpios */
-    .stTextInput input, 
-    .stTextArea textarea {
-        background-color: #1e1e1e !important;
-        color: #FFFFFF !important;
-        -webkit-text-fill-color: #FFFFFF !important;
-        border: 1px solid #3E3E3E !important;
-        border-radius: 12px !important;
-        padding: 12px !important;
-        font-size: 14px !important;
-        font-family: 'Google Sans', Helvetica, sans-serif;
-    }
-    .stTextInput input:focus, 
-    .stTextArea textarea:focus {
-        border-color: #1DB954 !important;
-        box-shadow: 0 0 0 1px #1DB954 !important;
     }
 
     div[data-baseweb="slider"] div[role="slider"] {
@@ -320,7 +329,7 @@ with st.sidebar:
   )
 
 # =====================================================================
-# HERO SECTION (Visible solo en el paso de creación inicial)
+# HERO SECTION (Visible en el paso de creación)
 # =====================================================================
 if st.session_state["paso_actual"] == "creacion":
   st.markdown('<div class="hero-container">', unsafe_allow_html=True)
@@ -351,23 +360,18 @@ if st.session_state["paso_actual"] == "creacion":
       unsafe_allow_html=True,
   )
   st.markdown("</div>", unsafe_allow_html=True)
-  st.markdown("---")
+  st.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
 
 # =====================================================================
-# PASO 1: BLOQUE DE CREACIÓN DE PLAYLIST CON INTERFAZ ESTILO GEMINI
+# PASO 1: BLOQUE DE ENTRADA ESTILO GOOGLE AI STUDIO / GEMINI PLAYGROUND
 # =====================================================================
 if st.session_state["paso_actual"] == "creacion":
-  st.markdown(
-      "<h2 style='font-size: 18px; margin-bottom: 8px;'>¿Qué música quieres"
-      " escuchar hoy?</h2>",
-      unsafe_allow_html=True,
-  )
 
-  # Panel de ajustes desplegable (controlado por el botón de sliders inferior izquierdo)
+  # Desplegable de Ajustes
   if st.session_state["mostrar_ajustes"]:
     st.markdown(
-        "<div style='background: rgba(255,255,255,0.04); padding: 14px;"
-        " border-radius: 10px; margin-bottom: 10px;'>",
+        "<div style='background: #181818; border: 1px solid #333; padding:"
+        " 14px; border-radius: 12px; margin-bottom: 12px;'>",
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -386,42 +390,33 @@ if st.session_state["paso_actual"] == "creacion":
     )
     st.markdown("</div>", unsafe_allow_html=True)
   else:
-    # Valores por defecto si los ajustes están ocultos
     num_canciones = 15
     num_artistas = 5
     temperatura = 0.7
 
-  # Cuadro de texto principal tipo chat/prompt
+  # Campo de entrada de texto principal
   prompt_usuario = st.text_area(
-      "Escribe tu prompt musical aquí...",
+      "Escribe aquí lo que deseas escuchar...",
       value="",
-      height=100,
+      height=120,
       key="main_prompt_box",
       label_visibility="collapsed",
   )
 
-  # Fila inferior emulando la botonera de Gemini (Sliders a la izquierda, Enviar a la derecha)
-  col_gem1, col_gem2 = st.columns([1, 4])
-  with col_gem1:
-    icon_ajustes = "🎛️ Ocultar ajustes" if st.session_state["mostrar_ajustes"] else "🎛️ Ajustes"
-    if st.button(icon_ajustes, use_container_width=True, key="btn_toggle_ajustes"):
+  # Fila inferior con botones integrados e iconos SVG lineales (Ajustes a la izquierda, Ejecutar a la derecha)
+  col_btn1, col_btn2 = st.columns([1, 1])
+  with col_btn1:
+    if st.button("🎛️ Filtros / Ajustes", key="btn_toggle_ajustes"):
       st.session_state["mostrar_ajustes"] = not st.session_state["mostrar_ajustes"]
       st.rerun()
 
-  with col_gem2:
-    if st.button(
-        "Generar playlist con IA ➔", type="primary", use_container_width=True, key="btn_enviar_gemini"
-    ):
+  with col_btn2:
+    if st.button("Ejecutar", type="primary", use_container_width=True, key="btn_enviar_gemini"):
       if not prompt_usuario.strip():
-        st.error(
-            "Por favor, describe detalladamente la música o los artistas que"
-            " deseas incluir."
-        )
+        st.error("Por favor, escribe lo que deseas escuchar.")
       else:
         resultado_ia = ""
-        with st.spinner(
-            "Generando curación musical única con Inteligencia Artificial..."
-        ):
+        with st.spinner("Generando curación musical única con IA..."):
           try:
             ai_client = genai.Client()
             prompt_sistema = (
@@ -452,7 +447,7 @@ if st.session_state["paso_actual"] == "creacion":
             st.rerun()
 
 # =====================================================================
-# PASO 2: REVISIÓN DE LA PLAYLIST & PREVISUALIZACIÓN DE AUDIO (OPCIÓN 5)
+# PASO 2: REVISIÓN DE LA PLAYLIST & PREVISUALIZACIÓN DE AUDIO
 # =====================================================================
 elif st.session_state["paso_actual"] == "revision":
   st.markdown(
@@ -466,7 +461,6 @@ elif st.session_state["paso_actual"] == "revision":
       unsafe_allow_html=True,
   )
 
-  # Caja de edición de texto plano
   st.session_state["resultado_lista"] = st.text_area(
       "Canciones (Artista - Canción):",
       value=st.session_state["resultado_lista"],
@@ -474,11 +468,10 @@ elif st.session_state["paso_actual"] == "revision":
       key="editable_result_box",
   )
 
-  # Bloque de Previsualización de Audio Integrada (Opción 5)
   st.markdown("<div style='margin: 14px 0;'></div>", unsafe_allow_html=True)
   st.markdown(
       "<h3 style='font-size: 15px; color: #1DB954 !important;'>🎧 Previsualización"
-      " de pistas (Previews)</h3>",
+      " de pistas</h3>",
       unsafe_allow_html=True,
   )
 
@@ -497,7 +490,7 @@ elif st.session_state["paso_actual"] == "revision":
           l.strip()
           for l in st.session_state["resultado_lista"].splitlines()
           if l.strip()
-      ][:6]  # Muestra previews de las primeras 6 pistas para mantener la fluidez
+      ][:6]
 
       for idx, track_query in enumerate(lines_preview):
         res = sp.search(q=track_query, type="track", limit=1)
@@ -538,7 +531,6 @@ elif st.session_state["paso_actual"] == "revision":
   with col_r1:
     if st.button("Atrás", use_container_width=True):
       st.session_state["paso_actual"] = "creacion"
-      st.session_state["modo_creacion"] = None
       st.rerun()
   with col_r2:
     if st.button("Continuar a exportar", type="primary", use_container_width=True):
