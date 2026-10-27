@@ -1046,6 +1046,9 @@ if st.session_state.step == "create":
         'de ánimo o una mezcla inesperada. Tu próxima playlist '
         'empieza aquí.</p>',
         unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="composer">', unsafe_allow_html=True)
 
     st.text_area(
         "Tu petición",
